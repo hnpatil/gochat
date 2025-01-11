@@ -4,7 +4,7 @@ go 1.23.0
 
 require (
 	github.com/google/uuid v1.6.0
-	github.com/hnpatil/lofr v1.1.0
+	github.com/hnpatil/lofr v1.1.1
 	github.com/huandu/go-sqlbuilder v1.33.1
 	gofr.dev v1.18.0
 )

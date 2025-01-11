@@ -1,14 +1,13 @@
 package main
 
 import (
-	"github.com/hnpatil/gochat/auth"
 	"github.com/hnpatil/gochat/handlers"
 	"github.com/hnpatil/gochat/handlers/message"
 	"github.com/hnpatil/gochat/handlers/room"
 	"github.com/hnpatil/gochat/handlers/user"
 	"github.com/hnpatil/gochat/migrations"
 	userrepo "github.com/hnpatil/gochat/repos/user"
-	usersvc "github.com/hnpatil/gochat/usecases/user"
+	usersvc "github.com/hnpatil/gochat/services/user"
 	"github.com/hnpatil/lofr"
 	"github.com/huandu/go-sqlbuilder"
 	"gofr.dev/pkg/gofr"
@@ -22,7 +21,7 @@ func main() {
 	apiKeys := app.Config.Get("API_KEYS")
 
 	app.EnableAPIKeyAuth(strings.Split(apiKeys, ",")...)
-	app.UseMiddleware(auth.Handler)
+	app.UseMiddleware(lofr.Middleware)
 
 	sqlbuilder.DefaultFlavor = sqlbuilder.PostgreSQL
 

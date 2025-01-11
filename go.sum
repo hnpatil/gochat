@@ -130,6 +130,8 @@ github.com/hashicorp/golang-lru/v2 v2.0.7 h1:a+bsQ5rvGLjzHuww6tVxozPZFVghXaHOwFs
 github.com/hashicorp/golang-lru/v2 v2.0.7/go.mod h1:QeFd9opnmA6QUJc5vARoKUSoFhyfM2/ZepoAG6RGpeM=
 github.com/hnpatil/lofr v1.1.0 h1:lgs9SwBDuUDcUvuUp/oS/Dt5fNDgPedwojqoehF7aZ0=
 github.com/hnpatil/lofr v1.1.0/go.mod h1:+IGjaEMEEzIPm/2bE1/Qj1xpSkcA8jeqkV1Hu8Qe1ZI=
+github.com/hnpatil/lofr v1.1.1 h1:UIX5W6vOjuTPf0msS2zt0w9F3q9zWlOTr+dpsU3czrw=
+github.com/hnpatil/lofr v1.1.1/go.mod h1:+IGjaEMEEzIPm/2bE1/Qj1xpSkcA8jeqkV1Hu8Qe1ZI=
 github.com/huandu/go-assert v1.1.6 h1:oaAfYxq9KNDi9qswn/6aE0EydfxSa+tWZC1KabNitYs=
 github.com/huandu/go-assert v1.1.6/go.mod h1:JuIfbmYG9ykwvuxoJ3V8TB5QP+3+ajIA54Y44TmkMxs=
 github.com/huandu/go-sqlbuilder v1.33.1 h1:lwLv8Azdi5BUmaG/QgRkzeaxyMjaqp5rj39oBbmTi1o=

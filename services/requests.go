@@ -1,4 +1,4 @@
-package usecases
+package services
 
 type CreateUser struct {
 	ID   string
