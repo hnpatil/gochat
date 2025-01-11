@@ -8,37 +8,38 @@ import (
 )
 
 type Entity struct {
-	ID         uuid.UUID `json:"id"`
-	CreatedAt  time.Time `json:"createdAt"`
-	ModifiedAt time.Time `json:"modifiedAt"`
-	DeletedAt  time.Time `json:"deletedAt"`
+	CreatedAt  time.Time  `json:"createdAt,omitempty"`
+	ModifiedAt time.Time  `json:"modifiedAt,omitempty"`
+	DeletedAt  *time.Time `json:"deletedAt,omitempty"`
 }
 
 type User struct {
 	Entity
-	ExternalID string `json:"externalID"`
-	Name       string `json:"name"`
+	ID   string `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
 }
 
 type Message struct {
 	Entity
-	RoomID   uuid.UUID      `json:"roomID"`
-	SenderID uuid.UUID      `json:"senderID"`
-	SentAt   time.Time      `json:"sentAt"`
-	Status   message.Status `json:"status"`
-	Content  string         `json:"content"`
+	ID       uuid.UUID      `json:"id,omitempty"`
+	RoomID   uuid.UUID      `json:"roomID,omitempty"`
+	SenderID string         `json:"senderID,omitempty"`
+	SentAt   time.Time      `json:"sentAt,omitempty"`
+	Status   message.Status `json:"status,omitempty"`
+	Content  string         `json:"content,omitempty"`
 }
 
 type Room struct {
 	Entity
-	Name    string        `json:"name"`
-	IsGroup bool          `json:"isGroup"`
-	Members []*RoomMember `json:"members,omitempty"`
+	ID      uuid.UUID     `json:"id,omitempty"`
+	Name    string        `json:"name,omitempty"`
+	IsGroup bool          `json:"isGroup,omitempty"`
+	Members []*RoomMember `json:"members,omitempty,omitempty"`
 }
 
 type RoomMember struct {
 	Entity
-	RoomID uuid.UUID       `json:"roomID"`
-	UserID uuid.UUID       `json:"userID"`
-	Role   roommember.Role `json:"role"`
+	RoomID uuid.UUID       `json:"roomID,omitempty"`
+	UserID string          `json:"userID,omitempty"`
+	Role   roommember.Role `json:"role,omitempty"`
 }

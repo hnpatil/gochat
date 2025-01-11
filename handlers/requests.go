@@ -6,26 +6,17 @@ import (
 )
 
 type CreateUser struct {
-	ExternalID string `json:"externalID" validate:"required"`
-	Name       string `json:"name"`
+	ID   string `json:"-"`
+	Name string `json:"name"`
 }
 
 type UpdateUser struct {
-	ID   string `path:"id" validate:"required,uuid"`
 	Name string `json:"name,omitempty"`
 }
 
-type GetUser struct {
-	ID string `path:"id" validate:"required,uuid"`
-}
-
-type DeleteUser struct {
-	ID string `path:"id" validate:"required,uuid"`
-}
-
 type ListUsers struct {
-	ID         string `query:"id"`
-	ExternalID string `query:"externalID"`
+	Page int `query:"page"`
+	Size int `query:"size"`
 }
 
 type CreateMessage struct {
