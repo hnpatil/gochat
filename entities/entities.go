@@ -31,7 +31,7 @@ type Message struct {
 
 type Room struct {
 	Entity
-	ID      uuid.UUID     `json:"id,omitempty"`
+	ID      string        `json:"id,omitempty"`
 	Name    string        `json:"name,omitempty"`
 	IsGroup bool          `json:"isGroup,omitempty"`
 	Members []*RoomMember `json:"members,omitempty,omitempty"`
@@ -39,7 +39,7 @@ type Room struct {
 
 type RoomMember struct {
 	Entity
-	RoomID uuid.UUID       `json:"roomID,omitempty"`
+	RoomID string          `json:"roomID,omitempty"`
 	UserID string          `json:"userID,omitempty"`
 	Role   roommember.Role `json:"role,omitempty"`
 }

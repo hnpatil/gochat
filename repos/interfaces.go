@@ -12,3 +12,11 @@ type User interface {
 	List(ctx *gofr.Context, filter *UserFilter) ([]*entities.User, error)
 	Delete(ctx *gofr.Context, filter *entities.User) error
 }
+
+type Room interface {
+	Create(ctx *gofr.Context, request *entities.Room) (*entities.Room, error)
+	Update(ctx *gofr.Context, filter, request *entities.Room) (*entities.Room, error)
+	Get(ctx *gofr.Context, filter *entities.Room) (*entities.Room, error)
+	List(ctx *gofr.Context, filter *RoomFilter) ([]*entities.Room, error)
+	Delete(ctx *gofr.Context, filter *entities.Room) error
+}

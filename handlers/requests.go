@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"github.com/google/uuid"
 	"github.com/hnpatil/gochat/entities/message"
 )
 
@@ -22,7 +21,7 @@ type UpdateUser struct {
 type ListUsers struct {
 	UserID string `header:"X-User-Id"`
 	Page   int    `query:"page"`
-	Size   int    `query:"size"`
+	Size   int    `query:"size" default:"20"`
 }
 
 type DeleteUser struct {
@@ -65,27 +64,30 @@ type ListMessages struct {
 
 type CreateRoom struct {
 	UserRequest
-	UserID  uuid.UUID `json:"-"`
-	Members []string  `json:"members" validate:"required,gt=0"`
+	RoomID  string   `json:"roomID"`
+	Name    string   `json:"name"`
+	Members []string `json:"members" validate:"required,gt=0"`
 }
 
 type UpdateRoom struct {
 	UserRequest
-	ID   string `path:"id" validate:"required,uuid"`
+	ID   string `path:"id" validate:"required"`
 	Name string `json:"name"`
 }
 
 type GetRoom struct {
 	UserRequest
-	ID string `path:"id" validate:"required,uuid"`
+	ID string `path:"id" validate:"required"`
 }
 
 type DeleteRoom struct {
 	UserRequest
-	ID string `path:"id" validate:"required,uuid"`
+	ID string `path:"id" validate:"required"`
 }
 
 type ListRooms struct {
 	UserRequest
-	ModifiedAfter string `query:"modifiedAfter" validate:"datetime=2006-01-02 15:04:05"`
+	Page    int    `query:"page"`
+	Size    int    `query:"size" default:"20"`
+	Include string `query:"include"`
 }

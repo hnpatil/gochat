@@ -12,7 +12,7 @@ const (
 	);`
 
 	createRooms = `create table rooms(
-      id UUID PRIMARY KEY,
+      id TEXT PRIMARY KEY,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       modified_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       deleted_at TIMESTAMP,
@@ -21,7 +21,7 @@ const (
 	);`
 
 	createRoomMembers = `CREATE TABLE room_members (
-		room_id UUID NOT NULL,
+		room_id TEXT NOT NULL,
 		user_id TEXT NOT NULL,
 		role TEXT NOT NULL,
 		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -35,7 +35,7 @@ const (
 		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		modified_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		deleted_at TIMESTAMP,
-		room_id UUID NOT NULL,
+		room_id TEXT NOT NULL,
 		sender_id TEXT NOT NULL,
 		sent_at TIMESTAMP,
 		status TEXT NOT NULL,
