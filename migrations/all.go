@@ -30,7 +30,7 @@ const (
 		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   	);`
 
-	createMessages = `CREATE TABLE message (
+	createMessages = `CREATE TABLE messages (
 		id UUID PRIMARY KEY,
 		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		modified_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

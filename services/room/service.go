@@ -52,7 +52,7 @@ func (s *svc) Create(ctx *gofr.Context, req *services.CreateRoom) (*entities.Roo
 }
 
 func (s *svc) Update(ctx *gofr.Context, req *services.UpdateRoom) (*entities.Room, error) {
-	err := s.validateRole(ctx, req.RoomID, req.UserID, roommember.RoleAdmin)
+	err := s.ValidateRole(ctx, req.RoomID, req.UserID, roommember.RoleAdmin)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (s *svc) Update(ctx *gofr.Context, req *services.UpdateRoom) (*entities.Roo
 }
 
 func (s *svc) Get(ctx *gofr.Context, req *services.GetRoom) (*entities.Room, error) {
-	err := s.validateRole(ctx, req.RoomID, req.UserID, roommember.RoleAdmin, roommember.RoleMember)
+	err := s.ValidateRole(ctx, req.RoomID, req.UserID, roommember.RoleAdmin, roommember.RoleMember)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func (s *svc) List(ctx *gofr.Context, req *services.ListRoom) ([]*entities.Room,
 }
 
 func (s *svc) Delete(ctx *gofr.Context, req *services.DeleteRoom) error {
-	err := s.validateRole(ctx, req.RoomID, req.UserID, roommember.RoleAdmin)
+	err := s.ValidateRole(ctx, req.RoomID, req.UserID, roommember.RoleAdmin)
 	if err != nil {
 		return err
 	}
@@ -82,7 +82,7 @@ func (s *svc) Delete(ctx *gofr.Context, req *services.DeleteRoom) error {
 	return s.repo.Delete(ctx, &entities.Room{ID: req.RoomID})
 }
 
-func (s *svc) validateRole(ctx *gofr.Context, roomID string, userID string, roles ...roommember.Role) error {
+func (s *svc) ValidateRole(ctx *gofr.Context, roomID string, userID string, roles ...roommember.Role) error {
 	room, err := s.repo.Get(ctx, &entities.Room{ID: roomID})
 	if err != nil {
 		return err

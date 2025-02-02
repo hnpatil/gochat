@@ -1,5 +1,7 @@
 package repos
 
+import "time"
+
 type UserFilter struct {
 	Page   int
 	Size   int
@@ -11,4 +13,9 @@ type RoomFilter struct {
 	Size    int
 	UserID  string
 	Include []string
+}
+
+type MessageFilter struct {
+	ModifiedBefore time.Time
+	RoomID         string
 }

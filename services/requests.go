@@ -1,5 +1,11 @@
 package services
 
+import (
+	"github.com/google/uuid"
+	"github.com/hnpatil/gochat/entities/message"
+	"time"
+)
+
 type CreateUser struct {
 	ID   string
 	Name string
@@ -52,4 +58,34 @@ type ListRoom struct {
 type DeleteRoom struct {
 	RoomID string
 	UserID string
+}
+
+type CreateMessage struct {
+	UserID  string
+	RoomID  string
+	Status  message.Status
+	Content string
+}
+
+type UpdateMessage struct {
+	UserID    string
+	RoomID    string
+	MessageID uuid.UUID
+	Status    message.Status
+	Content   string
+}
+
+type GetMessage struct {
+}
+
+type ListMessage struct {
+	UserID         string
+	RoomID         string
+	ModifiedBefore time.Time
+}
+
+type DeleteMessage struct {
+	UserID    string
+	RoomID    string
+	MessageID uuid.UUID
 }

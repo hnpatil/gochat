@@ -6,8 +6,10 @@ import (
 	"github.com/hnpatil/gochat/handlers/room"
 	"github.com/hnpatil/gochat/handlers/user"
 	"github.com/hnpatil/gochat/migrations"
+	messagerepo "github.com/hnpatil/gochat/repos/message"
 	roomrepo "github.com/hnpatil/gochat/repos/room"
 	userrepo "github.com/hnpatil/gochat/repos/user"
+	messagesvc "github.com/hnpatil/gochat/services/message"
 	roomsvc "github.com/hnpatil/gochat/services/room"
 	usersvc "github.com/hnpatil/gochat/services/user"
 	"github.com/hnpatil/lofr"
@@ -27,10 +29,13 @@ func main() {
 
 	sqlbuilder.DefaultFlavor = sqlbuilder.PostgreSQL
 
-	userHandler := user.New(usersvc.New(userrepo.New()))
-	roomHandler := room.New(roomsvc.New(roomrepo.New()))
+	roomServices := roomsvc.New(roomrepo.New())
 
-	registerRoutes(app, userHandler, roomHandler, message.New())
+	userHandler := user.New(usersvc.New(userrepo.New()))
+	roomHandler := room.New(roomServices)
+	messageHandler := message.New(messagesvc.New(messagerepo.New(), roomServices))
+
+	registerRoutes(app, userHandler, roomHandler, messageHandler)
 
 	app.Run()
 }

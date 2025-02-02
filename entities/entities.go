@@ -22,9 +22,9 @@ type User struct {
 type Message struct {
 	Entity
 	ID       uuid.UUID      `json:"id,omitempty"`
-	RoomID   uuid.UUID      `json:"roomID,omitempty"`
+	RoomID   string         `json:"roomID,omitempty"`
 	SenderID string         `json:"senderID,omitempty"`
-	SentAt   time.Time      `json:"sentAt,omitempty"`
+	SentAt   *time.Time     `json:"sentAt,omitempty"`
 	Status   message.Status `json:"status,omitempty"`
 	Content  string         `json:"content,omitempty"`
 }

@@ -30,3 +30,11 @@ func UnAuthorisedError(message string) Error {
 		level:  logging.WARN,
 	}
 }
+
+func ForbiddenError(message string) Error {
+	return Error{
+		error:  message,
+		status: http.StatusForbidden,
+		level:  logging.WARN,
+	}
+}
