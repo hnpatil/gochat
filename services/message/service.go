@@ -6,6 +6,7 @@ import (
 	"github.com/hnpatil/gochat/entities"
 	"github.com/hnpatil/gochat/entities/message"
 	"github.com/hnpatil/gochat/entities/roommember"
+	"github.com/hnpatil/gochat/errors"
 	"github.com/hnpatil/gochat/repos"
 	"github.com/hnpatil/gochat/services"
 	"gofr.dev/pkg/gofr"
@@ -50,11 +51,11 @@ func (s *svc) Update(ctx *gofr.Context, req *services.UpdateMessage) (*entities.
 	}
 
 	if msg.SenderID != req.UserID {
-		return nil, services.UnAuthorisedError(fmt.Sprintf("user %s cannot edit messsage %s", req.UserID, msg.ID))
+		return nil, errors.UnAuthorised("edit", fmt.Sprintf("message - %s", msg.ID))
 	}
 
 	if msg.Status == message.StatusSent {
-		return nil, services.ForbiddenError("cannot edit sent message")
+		return nil, errors.Forbidden("edit sent message")
 	}
 
 	updateReq := &entities.Message{
@@ -106,11 +107,11 @@ func (s *svc) Delete(ctx *gofr.Context, req *services.DeleteMessage) error {
 	}
 
 	if msg.SenderID != req.UserID {
-		return services.UnAuthorisedError(fmt.Sprintf("user %s cannot delete messsage %s", req.UserID, msg.ID))
+		return errors.UnAuthorised("delete", fmt.Sprintf("message - %s", msg.ID))
 	}
 
 	if msg.Status == message.StatusSent {
-		return services.ForbiddenError("cannot delete sent message")
+		return errors.Forbidden("delete sent message")
 	}
 
 	return s.repo.Delete(ctx, &entities.Message{ID: req.MessageID})

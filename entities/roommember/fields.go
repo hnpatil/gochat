@@ -8,3 +8,10 @@ const (
 	FieldRole      string = "role"
 	FieldCreatedAt string = "created_at"
 )
+
+type Role string
+
+const (
+	RoleAdmin  Role = "ADMIN"
+	RoleMember Role = "MEMBER"
+)

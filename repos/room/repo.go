@@ -22,7 +22,7 @@ func New() repos.Room {
 func (r *roomRepo) Create(ctx *gofr.Context, request *entities.Room) (*entities.Room, error) {
 	tx, err := ctx.SQL.Begin()
 	if err != nil {
-		return nil, err
+		return nil, repos.Error(err, room.Entity)
 	}
 
 	query, args := sqlbuilder.NewInsertBuilder().
@@ -33,7 +33,7 @@ func (r *roomRepo) Create(ctx *gofr.Context, request *entities.Room) (*entities.
 
 	_, err = tx.ExecContext(ctx.Context, query, args...)
 	if err != nil {
-		return nil, err
+		return nil, repos.Error(err, room.Entity)
 	}
 
 	for _, member := range request.Members {
@@ -45,13 +45,13 @@ func (r *roomRepo) Create(ctx *gofr.Context, request *entities.Room) (*entities.
 
 		_, err = tx.ExecContext(ctx.Context, query, args...)
 		if err != nil {
-			return nil, err
+			return nil, repos.Error(err, room.Entity)
 		}
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return nil, err
+		return nil, repos.Error(err, room.Entity)
 	}
 
 	return r.Get(ctx, &entities.Room{ID: request.ID})
@@ -69,16 +69,16 @@ func (r *roomRepo) Update(ctx *gofr.Context, filter, request *entities.Room) (*e
 
 	res, err := ctx.SQL.ExecContext(ctx, query, args...)
 	if err != nil {
-		return nil, err
+		return nil, repos.Error(err, room.Entity)
 	}
 
 	n, err := res.RowsAffected()
 	if err != nil {
-		return nil, err
+		return nil, repos.Error(err, room.Entity)
 	}
 
 	if n == 0 {
-		return nil, sql.ErrNoRows
+		return nil, repos.Error(sql.ErrNoRows, room.Entity)
 	}
 
 	return r.Get(ctx, &entities.Room{ID: filter.ID})
@@ -93,19 +93,19 @@ func (r *roomRepo) Get(ctx *gofr.Context, filter *entities.Room) (*entities.Room
 
 	row := ctx.SQL.QueryRowContext(ctx, query, args...)
 	if err := row.Err(); err != nil {
-		return nil, err
+		return nil, repos.Error(err, room.Entity)
 	}
 
 	rm := &entities.Room{}
 
 	err := row.Scan(&rm.ID, &rm.Name, &rm.IsGroup, &rm.CreatedAt, &rm.ModifiedAt, &rm.DeletedAt)
 	if err != nil {
-		return nil, err
+		return nil, repos.Error(err, room.Entity)
 	}
 
 	members, err := r.getRoomMembers(ctx, []string{rm.ID})
 	if err != nil {
-		return nil, err
+		return nil, repos.Error(err, room.Entity)
 	}
 
 	rm.Members = members[rm.ID]
@@ -140,7 +140,7 @@ func (r *roomRepo) List(ctx *gofr.Context, filter *repos.RoomFilter) ([]*entitie
 
 	rows, err := ctx.SQL.QueryContext(ctx, query, args...)
 	if err != nil {
-		return nil, err
+		return nil, repos.Error(err, room.Entity)
 	}
 
 	defer rows.Close()
@@ -151,7 +151,7 @@ func (r *roomRepo) List(ctx *gofr.Context, filter *repos.RoomFilter) ([]*entitie
 		rm := &entities.Room{}
 		err = rows.Scan(&rm.ID, &rm.Name, &rm.IsGroup, &rm.CreatedAt, &rm.ModifiedAt, &rm.DeletedAt)
 		if err != nil {
-			return nil, err
+			return nil, repos.Error(err, room.Entity)
 		}
 
 		rooms = append(rooms, rm)
@@ -166,7 +166,7 @@ func (r *roomRepo) List(ctx *gofr.Context, filter *repos.RoomFilter) ([]*entitie
 
 		membersMap, err := r.getRoomMembers(ctx, roomIds)
 		if err != nil {
-			return nil, err
+			return nil, repos.Error(err, room.Entity)
 		}
 
 		for _, rm := range rooms {
@@ -183,16 +183,16 @@ func (r *roomRepo) Delete(ctx *gofr.Context, filter *entities.Room) error {
 
 	res, err := ctx.SQL.ExecContext(ctx, query, args...)
 	if err != nil {
-		return err
+		return repos.Error(err, room.Entity)
 	}
 
 	n, err := res.RowsAffected()
 	if err != nil {
-		return err
+		return repos.Error(err, room.Entity)
 	}
 
 	if n == 0 {
-		return sql.ErrNoRows
+		return repos.Error(sql.ErrNoRows, room.Entity)
 	}
 
 	return nil

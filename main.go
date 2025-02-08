@@ -29,9 +29,10 @@ func main() {
 
 	sqlbuilder.DefaultFlavor = sqlbuilder.PostgreSQL
 
-	roomServices := roomsvc.New(roomrepo.New())
+	userRepo := userrepo.New()
+	roomServices := roomsvc.New(roomrepo.New(), userRepo)
 
-	userHandler := user.New(usersvc.New(userrepo.New()))
+	userHandler := user.New(usersvc.New(userRepo))
 	roomHandler := room.New(roomServices)
 	messageHandler := message.New(messagesvc.New(messagerepo.New(), roomServices))
 
@@ -55,6 +56,5 @@ func registerRoutes(app *gofr.App, user handlers.User, room handlers.Room, messa
 	app.POST("/v1/rooms/{roomID}/messages", lofr.Handler(message.Create))
 	app.GET("/v1/rooms/{roomID}/messages", lofr.Handler(message.List))
 	app.PATCH("/v1/rooms/{roomID}/messages/{messageID}", lofr.Handler(message.Update))
-	app.GET("/v1/rooms/{roomID}/messages/{messageID}", lofr.Handler(message.Get))
 	app.DELETE("/v1/rooms/{roomID}/messages/{messageID}", lofr.Handler(message.Delete))
 }

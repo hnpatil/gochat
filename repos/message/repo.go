@@ -26,7 +26,7 @@ func (r *repo) Create(ctx *gofr.Context, request *entities.Message) (*entities.M
 
 	_, err := ctx.SQL.ExecContext(ctx, query, args...)
 	if err != nil {
-		return nil, err
+		return nil, repos.Error(err, message.Entity)
 	}
 
 	return r.Get(ctx, &entities.Message{ID: request.ID})
@@ -51,16 +51,16 @@ func (r *repo) Update(ctx *gofr.Context, filter, request *entities.Message) (*en
 	query, args := sb.Update(message.Table).Set(sets...).Where(sb.Equal(message.FieldID, filter.ID)).Build()
 	res, err := ctx.SQL.ExecContext(ctx, query, args...)
 	if err != nil {
-		return nil, err
+		return nil, repos.Error(err, message.Entity)
 	}
 
 	n, err := res.RowsAffected()
 	if err != nil {
-		return nil, err
+		return nil, repos.Error(err, message.Entity)
 	}
 
 	if n == 0 {
-		return nil, sql.ErrNoRows
+		return nil, repos.Error(sql.ErrNoRows, message.Entity)
 	}
 
 	return r.Get(ctx, &entities.Message{ID: filter.ID})
@@ -77,7 +77,7 @@ func (r *repo) Get(ctx *gofr.Context, filter *entities.Message) (*entities.Messa
 
 	row := ctx.SQL.QueryRowContext(ctx, query, args...)
 	if err := row.Err(); err != nil {
-		return nil, err
+		return nil, repos.Error(err, message.Entity)
 	}
 
 	msg := &entities.Message{}
@@ -87,7 +87,7 @@ func (r *repo) Get(ctx *gofr.Context, filter *entities.Message) (*entities.Messa
 		&msg.Content, &msg.CreatedAt, &msg.ModifiedAt, &msg.DeletedAt,
 	)
 	if err != nil {
-		return nil, err
+		return nil, repos.Error(err, message.Entity)
 	}
 
 	return msg, nil
@@ -112,7 +112,7 @@ func (r *repo) List(ctx *gofr.Context, filter *repos.MessageFilter) ([]*entities
 	query, args := sb.OrderBy(message.FieldModifiedAt).Desc().Limit(20).Build()
 	rows, err := ctx.SQL.QueryContext(ctx, query, args...)
 	if err != nil {
-		return nil, err
+		return nil, repos.Error(err, message.Entity)
 	}
 
 	defer rows.Close()
@@ -127,13 +127,13 @@ func (r *repo) List(ctx *gofr.Context, filter *repos.MessageFilter) ([]*entities
 			&msg.Content, &msg.CreatedAt, &msg.ModifiedAt, &msg.DeletedAt,
 		)
 		if err != nil {
-			return nil, err
+			return nil, repos.Error(err, message.Entity)
 		}
 
 		msgs = append(msgs, msg)
 	}
 
-	return msgs, err
+	return msgs, repos.Error(err, message.Entity)
 }
 
 func (r *repo) Delete(ctx *gofr.Context, filter *entities.Message) error {
@@ -142,16 +142,16 @@ func (r *repo) Delete(ctx *gofr.Context, filter *entities.Message) error {
 
 	res, err := ctx.SQL.ExecContext(ctx, query, args...)
 	if err != nil {
-		return err
+		return repos.Error(err, message.Entity)
 	}
 
 	n, err := res.RowsAffected()
 	if err != nil {
-		return err
+		return repos.Error(err, message.Entity)
 	}
 
 	if n == 0 {
-		return sql.ErrNoRows
+		return repos.Error(sql.ErrNoRows, message.Entity)
 	}
 
 	return nil

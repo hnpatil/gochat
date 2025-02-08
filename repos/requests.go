@@ -5,7 +5,7 @@ import "time"
 type UserFilter struct {
 	Page   int
 	Size   int
-	UserID string
+	UserID []string
 }
 
 type RoomFilter struct {

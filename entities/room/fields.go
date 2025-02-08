@@ -1,6 +1,7 @@
 package room
 
 const (
+	Entity          string = "Room"
 	Table           string = "rooms"
 	FieldID         string = "id"
 	FieldName       string = "name"

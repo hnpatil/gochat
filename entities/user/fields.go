@@ -1,6 +1,8 @@
 package user
 
 const (
+	Entity string = "User"
+
 	Table           string = "users"
 	FieldID         string = "id"
 	FieldName       string = "name"

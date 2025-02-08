@@ -1,10 +1,11 @@
 package room
 
 import (
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/hnpatil/gochat/entities"
 	"github.com/hnpatil/gochat/entities/roommember"
+	"github.com/hnpatil/gochat/entities/user"
+	"github.com/hnpatil/gochat/errors"
 	"github.com/hnpatil/gochat/repos"
 	"github.com/hnpatil/gochat/services"
 	"gofr.dev/pkg/gofr"
@@ -12,11 +13,12 @@ import (
 )
 
 type svc struct {
-	repo repos.Room
+	repo  repos.Room
+	users repos.User
 }
 
-func New(repo repos.Room) services.Room {
-	return &svc{repo}
+func New(repo repos.Room, users repos.User) services.Room {
+	return &svc{repo: repo, users: users}
 }
 
 func (s *svc) Create(ctx *gofr.Context, req *services.CreateRoom) (*entities.Room, error) {
@@ -37,8 +39,29 @@ func (s *svc) Create(ctx *gofr.Context, req *services.CreateRoom) (*entities.Roo
 
 	memberMap[req.UserID] = roommember.RoleAdmin
 
+	userIDs := make([]string, 0, len(memberMap))
+
+	for k, _ := range memberMap {
+		userIDs = append(userIDs, k)
+	}
+
+	usrs, err := s.users.List(ctx, &repos.UserFilter{UserID: userIDs})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(usrs) != len(userIDs) {
+		return nil, errors.EntityNotFound(user.Entity)
+	}
+
 	if len(memberMap) > 2 {
 		room.IsGroup = true
+	}
+
+	if !room.IsGroup {
+		for k, _ := range memberMap {
+			memberMap[k] = roommember.RoleAdmin
+		}
 	}
 
 	members := make([]*entities.RoomMember, 0, len(memberMap))
@@ -79,6 +102,15 @@ func (s *svc) Delete(ctx *gofr.Context, req *services.DeleteRoom) error {
 		return err
 	}
 
+	room, err := s.repo.Get(ctx, &entities.Room{ID: req.RoomID})
+	if err != nil {
+		return err
+	}
+
+	if !room.IsGroup {
+		return errors.Forbidden("delete chat")
+	}
+
 	return s.repo.Delete(ctx, &entities.Room{ID: req.RoomID})
 }
 
@@ -94,5 +126,5 @@ func (s *svc) ValidateRole(ctx *gofr.Context, roomID string, userID string, role
 		}
 	}
 
-	return services.UnAuthorisedError(fmt.Sprintf("user lacks %v role", roles))
+	return errors.MissingRoles(roles)
 }

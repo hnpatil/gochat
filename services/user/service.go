@@ -28,7 +28,7 @@ func (s *svc) Get(ctx *gofr.Context, req *services.GetUser) (*entities.User, err
 }
 
 func (s *svc) List(ctx *gofr.Context, req *services.ListUsers) ([]*entities.User, error) {
-	return s.repo.List(ctx, &repos.UserFilter{UserID: req.UserID, Page: req.Page, Size: req.Size})
+	return s.repo.List(ctx, &repos.UserFilter{UserID: []string{req.UserID}, Page: req.Page, Size: req.Size})
 }
 
 func (s *svc) Delete(ctx *gofr.Context, req *services.DeleteUser) error {
