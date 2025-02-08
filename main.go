@@ -12,11 +12,16 @@ import (
 	messagesvc "github.com/hnpatil/gochat/services/message"
 	roomsvc "github.com/hnpatil/gochat/services/room"
 	usersvc "github.com/hnpatil/gochat/services/user"
+	_ "github.com/hnpatil/gochat/static"
 	"github.com/hnpatil/lofr"
 	"github.com/huandu/go-sqlbuilder"
 	"gofr.dev/pkg/gofr"
 	"strings"
 )
+
+// @securityDefinitions.apikey ApiKey
+// @in header
+// @name X-API-KEY
 
 func main() {
 	app := gofr.New()

@@ -1,0 +1,100 @@
+definitions:
+  entities.User:
+    properties:
+      createdAt:
+        description: Time when entity was created
+        example: "2025-02-08T14:13:39.080551Z"
+        type: string
+      deletedAt:
+        description: Time when entity was deleted
+        example: "2025-02-08T14:13:39.080551Z"
+        type: string
+      id:
+        description: External identifier of the user
+        example: 89e46f30
+        type: string
+      modifiedAt:
+        description: Time when entity was modified
+        example: "2025-02-08T14:13:39.080551Z"
+        type: string
+      name:
+        description: Name of the user
+        example: John Doe
+        type: string
+    type: object
+  handlers.CreateUserBody:
+    properties:
+      name:
+        description: Name of the user
+        example: John Doe
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /v1/users:
+    get:
+      consumes:
+      - application/json
+      description: Retreive list of all users
+      parameters:
+      - description: External identifier of the user
+        in: header
+        name: X-User-ID
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Users per page
+        in: query
+        name: size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entities.User'
+            type: array
+      security:
+      - ApiKey: []
+      summary: List users
+      tags:
+      - Users
+    post:
+      consumes:
+      - application/json
+      description: Create a new user and return the created user.
+      parameters:
+      - description: User Request
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateUserBody'
+      - description: External identifier of the user
+        in: header
+        name: X-User-ID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/entities.User'
+      security:
+      - ApiKey: []
+      summary: Create a user
+      tags:
+      - Users
+securityDefinitions:
+  ApiKey:
+    in: header
+    name: X-API-KEY
+    type: apiKey
+swagger: "2.0"

@@ -3,3 +3,6 @@ create-db:
 
 start-db:
 	docker start go-chat-db
+
+swagger-init:
+	swag init --output ./static && cp ./static/swagger.json ./static/openapi.json

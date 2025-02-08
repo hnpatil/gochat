@@ -10,7 +10,11 @@ type UserRequest struct {
 
 type CreateUser struct {
 	UserRequest
-	Name string `json:"name"`
+	CreateUserBody
+}
+
+type CreateUserBody struct {
+	Name string `json:"name" example:"John Doe"` //Name of the user
 }
 
 type UpdateUser struct {
