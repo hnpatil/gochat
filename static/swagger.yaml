@@ -22,17 +22,49 @@ definitions:
         example: John Doe
         type: string
     type: object
-  handlers.CreateUserBody:
+  handlers.UserBody:
     properties:
       name:
         description: Name of the user
         example: John Doe
         type: string
     type: object
+  handlers.UserResponse:
+    properties:
+      data:
+        $ref: '#/definitions/entities.User'
+    type: object
+  handlers.UsersResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/entities.User'
+        type: array
+    type: object
 info:
   contact: {}
 paths:
   /v1/users:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a user.
+      parameters:
+      - description: External identifier of the user
+        in: header
+        name: X-User-ID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+      security:
+      - ApiKey: []
+      summary: Delete a user
+      tags:
+      - Users
     get:
       consumes:
       - application/json
@@ -56,12 +88,38 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/entities.User'
-            type: array
+            $ref: '#/definitions/handlers.UsersResponse'
       security:
       - ApiKey: []
       summary: List users
+      tags:
+      - Users
+    patch:
+      consumes:
+      - application/json
+      description: Update a user and return the updated user.
+      parameters:
+      - description: User Request
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UserBody'
+      - description: External identifier of the user
+        in: header
+        name: X-User-ID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.UserResponse'
+      security:
+      - ApiKey: []
+      summary: Update a user
       tags:
       - Users
     post:
@@ -74,7 +132,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/handlers.CreateUserBody'
+          $ref: '#/definitions/handlers.UserBody'
       - description: External identifier of the user
         in: header
         name: X-User-ID
@@ -86,7 +144,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/entities.User'
+            $ref: '#/definitions/handlers.UserResponse'
       security:
       - ApiKey: []
       summary: Create a user

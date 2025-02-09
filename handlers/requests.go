@@ -4,34 +4,6 @@ import (
 	"github.com/hnpatil/gochat/entities/message"
 )
 
-type UserRequest struct {
-	UserID string `header:"X-User-Id" validate:"required"`
-}
-
-type CreateUser struct {
-	UserRequest
-	CreateUserBody
-}
-
-type CreateUserBody struct {
-	Name string `json:"name" example:"John Doe"` //Name of the user
-}
-
-type UpdateUser struct {
-	UserRequest
-	Name string `json:"name,omitempty"`
-}
-
-type ListUsers struct {
-	UserID string `header:"X-User-Id"`
-	Page   int    `query:"page"`
-	Size   int    `query:"size" default:"20"`
-}
-
-type DeleteUser struct {
-	UserRequest
-}
-
 type CreateMessage struct {
 	UserRequest
 	RoomID  string         `path:"roomID" validate:"required"`
