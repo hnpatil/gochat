@@ -4,6 +4,249 @@
         "contact": {}
     },
     "paths": {
+        "/v1/rooms": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKey": []
+                    }
+                ],
+                "description": "Retreive list of all rooms that calling user is a member of.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Rooms"
+                ],
+                "summary": "List rooms",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "External identifier of the user",
+                        "name": "X-User-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Room ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "example": "1",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "20",
+                        "description": "Rooms per page",
+                        "name": "size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "members",
+                        "description": "Additional objects to be included in the response",
+                        "name": "include",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RoomsResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKey": []
+                    }
+                ],
+                "description": "Create a room and return the created room. Calling user is added as an ADMIN in the room.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Rooms"
+                ],
+                "summary": "Create a room",
+                "parameters": [
+                    {
+                        "description": "Room Request",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateRoomBody"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "External identifier of the user",
+                        "name": "X-User-ID",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RoomResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/rooms/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKey": []
+                    }
+                ],
+                "description": "Get a single room by its id.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Rooms"
+                ],
+                "summary": "Get room",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "External identifier of the user",
+                        "name": "X-User-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Room ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RoomResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKey": []
+                    }
+                ],
+                "description": "Delete a room. Calling user should be an ADMIN in the room.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Rooms"
+                ],
+                "summary": "Delete a room",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "External identifier of the user",
+                        "name": "X-User-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Room ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "ApiKey": []
+                    }
+                ],
+                "description": "Update a room and return the updated room. Calling user should be an ADMIN in the room.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Rooms"
+                ],
+                "summary": "Update a room",
+                "parameters": [
+                    {
+                        "description": "Room Request",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateRoomBody"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "External identifier of the user",
+                        "name": "X-User-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Room ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RoomResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/users": {
             "get": {
                 "security": [
@@ -31,12 +274,14 @@
                     },
                     {
                         "type": "integer",
+                        "example": 1,
                         "description": "Page number",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "example": 20,
                         "description": "Users per page",
                         "name": "size",
                         "in": "query"
@@ -174,6 +419,91 @@
         }
     },
     "definitions": {
+        "entities.Room": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "description": "Time when entity was created",
+                    "type": "string",
+                    "example": "2025-02-08T14:13:39.080551Z"
+                },
+                "deletedAt": {
+                    "description": "Time when entity was deleted",
+                    "type": "string",
+                    "example": "2025-02-08T14:13:39.080551Z"
+                },
+                "id": {
+                    "description": "Unique identifier of the room",
+                    "type": "string",
+                    "example": "89e47f30"
+                },
+                "isGroup": {
+                    "description": "Indicates if the room is a group. Is false for chats.",
+                    "type": "boolean",
+                    "example": true
+                },
+                "members": {
+                    "description": "List of room members",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.RoomMember"
+                    }
+                },
+                "modifiedAt": {
+                    "description": "Time when entity was modified",
+                    "type": "string",
+                    "example": "2025-02-08T14:13:39.080551Z"
+                },
+                "name": {
+                    "description": "Name of the room",
+                    "type": "string",
+                    "example": "Friends"
+                }
+            }
+        },
+        "entities.RoomMember": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "description": "Time when entity was created",
+                    "type": "string",
+                    "example": "2025-02-08T14:13:39.080551Z"
+                },
+                "deletedAt": {
+                    "description": "Time when entity was deleted",
+                    "type": "string",
+                    "example": "2025-02-08T14:13:39.080551Z"
+                },
+                "modifiedAt": {
+                    "description": "Time when entity was modified",
+                    "type": "string",
+                    "example": "2025-02-08T14:13:39.080551Z"
+                },
+                "role": {
+                    "description": "Role defines permissions of user on the room.",
+                    "enum": [
+                        "ADMIN",
+                        "MEMBER"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/roommember.Role"
+                        }
+                    ],
+                    "example": "ADMIN"
+                },
+                "roomID": {
+                    "description": "Unique identifier of the room",
+                    "type": "string",
+                    "example": "89e47f30"
+                },
+                "userID": {
+                    "description": "External identifier of the user",
+                    "type": "string",
+                    "example": "89e46f30"
+                }
+            }
+        },
         "entities.User": {
             "type": "object",
             "properties": {
@@ -201,6 +531,64 @@
                     "description": "Name of the user",
                     "type": "string",
                     "example": "John Doe"
+                }
+            }
+        },
+        "handlers.CreateRoomBody": {
+            "type": "object",
+            "required": [
+                "members"
+            ],
+            "properties": {
+                "members": {
+                    "description": "List of user ids of room members.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "89e46f31",
+                        "89e46f32"
+                    ]
+                },
+                "name": {
+                    "description": "Optional group name",
+                    "type": "string",
+                    "example": "Friends"
+                },
+                "roomID": {
+                    "description": "Optional unique identifier of the room. A default UID is created if not present",
+                    "type": "string",
+                    "example": "89e47f30"
+                }
+            }
+        },
+        "handlers.RoomResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/entities.Room"
+                }
+            }
+        },
+        "handlers.RoomsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.Room"
+                    }
+                }
+            }
+        },
+        "handlers.UpdateRoomBody": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "description": "Updated group name",
+                    "type": "string",
+                    "example": "Friends"
                 }
             }
         },
@@ -232,6 +620,17 @@
                     }
                 }
             }
+        },
+        "roommember.Role": {
+            "type": "string",
+            "enum": [
+                "ADMIN",
+                "MEMBER"
+            ],
+            "x-enum-varnames": [
+                "RoleAdmin",
+                "RoleMember"
+            ]
         }
     },
     "securityDefinitions": {

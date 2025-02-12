@@ -1,4 +1,67 @@
 definitions:
+  entities.Room:
+    properties:
+      createdAt:
+        description: Time when entity was created
+        example: "2025-02-08T14:13:39.080551Z"
+        type: string
+      deletedAt:
+        description: Time when entity was deleted
+        example: "2025-02-08T14:13:39.080551Z"
+        type: string
+      id:
+        description: Unique identifier of the room
+        example: 89e47f30
+        type: string
+      isGroup:
+        description: Indicates if the room is a group. Is false for chats.
+        example: true
+        type: boolean
+      members:
+        description: List of room members
+        items:
+          $ref: '#/definitions/entities.RoomMember'
+        type: array
+      modifiedAt:
+        description: Time when entity was modified
+        example: "2025-02-08T14:13:39.080551Z"
+        type: string
+      name:
+        description: Name of the room
+        example: Friends
+        type: string
+    type: object
+  entities.RoomMember:
+    properties:
+      createdAt:
+        description: Time when entity was created
+        example: "2025-02-08T14:13:39.080551Z"
+        type: string
+      deletedAt:
+        description: Time when entity was deleted
+        example: "2025-02-08T14:13:39.080551Z"
+        type: string
+      modifiedAt:
+        description: Time when entity was modified
+        example: "2025-02-08T14:13:39.080551Z"
+        type: string
+      role:
+        allOf:
+        - $ref: '#/definitions/roommember.Role'
+        description: Role defines permissions of user on the room.
+        enum:
+        - ADMIN
+        - MEMBER
+        example: ADMIN
+      roomID:
+        description: Unique identifier of the room
+        example: 89e47f30
+        type: string
+      userID:
+        description: External identifier of the user
+        example: 89e46f30
+        type: string
+    type: object
   entities.User:
     properties:
       createdAt:
@@ -22,6 +85,47 @@ definitions:
         example: John Doe
         type: string
     type: object
+  handlers.CreateRoomBody:
+    properties:
+      members:
+        description: List of user ids of room members.
+        example:
+        - 89e46f31
+        - 89e46f32
+        items:
+          type: string
+        type: array
+      name:
+        description: Optional group name
+        example: Friends
+        type: string
+      roomID:
+        description: Optional unique identifier of the room. A default UID is created
+          if not present
+        example: 89e47f30
+        type: string
+    required:
+    - members
+    type: object
+  handlers.RoomResponse:
+    properties:
+      data:
+        $ref: '#/definitions/entities.Room'
+    type: object
+  handlers.RoomsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/entities.Room'
+        type: array
+    type: object
+  handlers.UpdateRoomBody:
+    properties:
+      name:
+        description: Updated group name
+        example: Friends
+        type: string
+    type: object
   handlers.UserBody:
     properties:
       name:
@@ -41,9 +145,176 @@ definitions:
           $ref: '#/definitions/entities.User'
         type: array
     type: object
+  roommember.Role:
+    enum:
+    - ADMIN
+    - MEMBER
+    type: string
+    x-enum-varnames:
+    - RoleAdmin
+    - RoleMember
 info:
   contact: {}
 paths:
+  /v1/rooms:
+    get:
+      consumes:
+      - application/json
+      description: Retreive list of all rooms that calling user is a member of.
+      parameters:
+      - description: External identifier of the user
+        in: header
+        name: X-User-ID
+        required: true
+        type: string
+      - description: Room ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Page number
+        example: "1"
+        in: query
+        name: page
+        type: string
+      - description: Rooms per page
+        example: "20"
+        in: query
+        name: size
+        type: string
+      - description: Additional objects to be included in the response
+        example: members
+        in: query
+        name: include
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.RoomsResponse'
+      security:
+      - ApiKey: []
+      summary: List rooms
+      tags:
+      - Rooms
+    post:
+      consumes:
+      - application/json
+      description: Create a room and return the created room. Calling user is added
+        as an ADMIN in the room.
+      parameters:
+      - description: Room Request
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateRoomBody'
+      - description: External identifier of the user
+        in: header
+        name: X-User-ID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.RoomResponse'
+      security:
+      - ApiKey: []
+      summary: Create a room
+      tags:
+      - Rooms
+  /v1/rooms/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a room. Calling user should be an ADMIN in the room.
+      parameters:
+      - description: External identifier of the user
+        in: header
+        name: X-User-ID
+        required: true
+        type: string
+      - description: Room ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+      security:
+      - ApiKey: []
+      summary: Delete a room
+      tags:
+      - Rooms
+    get:
+      consumes:
+      - application/json
+      description: Get a single room by its id.
+      parameters:
+      - description: External identifier of the user
+        in: header
+        name: X-User-ID
+        required: true
+        type: string
+      - description: Room ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.RoomResponse'
+      security:
+      - ApiKey: []
+      summary: Get room
+      tags:
+      - Rooms
+    patch:
+      consumes:
+      - application/json
+      description: Update a room and return the updated room. Calling user should
+        be an ADMIN in the room.
+      parameters:
+      - description: Room Request
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateRoomBody'
+      - description: External identifier of the user
+        in: header
+        name: X-User-ID
+        required: true
+        type: string
+      - description: Room ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.RoomResponse'
+      security:
+      - ApiKey: []
+      summary: Update a room
+      tags:
+      - Rooms
   /v1/users:
     delete:
       consumes:
@@ -75,10 +346,12 @@ paths:
         name: X-User-ID
         type: string
       - description: Page number
+        example: 1
         in: query
         name: page
         type: integer
       - description: Users per page
+        example: 20
         in: query
         name: size
         type: integer

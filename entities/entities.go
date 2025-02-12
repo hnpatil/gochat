@@ -31,15 +31,15 @@ type Message struct {
 
 type Room struct {
 	Entity
-	ID      string        `json:"id,omitempty"`
-	Name    string        `json:"name,omitempty"`
-	IsGroup bool          `json:"isGroup,omitempty"`
-	Members []*RoomMember `json:"members,omitempty,omitempty"`
+	ID      string        `json:"id,omitempty" example:"89e47f30"`  //Unique identifier of the room
+	Name    string        `json:"name,omitempty" example:"Friends"` //Name of the room
+	IsGroup bool          `json:"isGroup,omitempty" example:"true"` //Indicates if the room is a group. Is false for chats.
+	Members []*RoomMember `json:"members,omitempty,omitempty"`      //List of room members
 }
 
 type RoomMember struct {
 	Entity
-	RoomID string          `json:"roomID,omitempty"`
-	UserID string          `json:"userID,omitempty"`
-	Role   roommember.Role `json:"role,omitempty"`
+	RoomID string          `json:"roomID,omitempty" example:"89e47f30"`                 //Unique identifier of the room
+	UserID string          `json:"userID,omitempty" example:"89e46f30"`                 //External identifier of the user
+	Role   roommember.Role `json:"role,omitempty" enums:"ADMIN,MEMBER" example:"ADMIN"` //Role defines permissions of user on the room.
 }

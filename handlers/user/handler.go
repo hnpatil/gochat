@@ -52,8 +52,8 @@ func (h *handler) Update(ctx *gofr.Context, req *handlers.UpdateUser) (*entities
 // @Produce json
 // @Security ApiKey
 // @Param X-User-ID header string false "External identifier of the user"
-// @Param page query int false "Page number"
-// @Param size query int false "Users per page"
+// @Param page query int false "Page number" example(1)
+// @Param size query int false "Users per page" example(20)
 // @Success 200 {object} handlers.UsersResponse
 // @Router /v1/users [get]
 func (h *handler) List(ctx *gofr.Context, req *handlers.ListUsers) ([]*entities.User, error) {
