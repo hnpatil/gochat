@@ -247,6 +247,213 @@
                 }
             }
         },
+        "/v1/rooms/{roomID}/messages": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKey": []
+                    }
+                ],
+                "description": "List messages in a room. Returns all SENT messages in the room along with drafts created by the calling user in descending order of modified time. Calling user should be a member in the room.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Messages"
+                ],
+                "summary": "List messages",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "External identifier of the user",
+                        "name": "X-User-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Room id of the room in which message is added",
+                        "name": "roomID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Modified date time upto which messages should be returned",
+                        "name": "modifiedBefore",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.MessagesResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKey": []
+                    }
+                ],
+                "description": "Create a message in the specified room and return the created message. Calling user should be a member in the room. Calling user is added as message sender.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Messages"
+                ],
+                "summary": "Create a message",
+                "parameters": [
+                    {
+                        "description": "Message Request",
+                        "name": "message",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.MessageBody"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "External identifier of the user",
+                        "name": "X-User-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Room id of the room in which message is added",
+                        "name": "roomID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.MessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/rooms/{roomID}/messages/messageID": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKey": []
+                    }
+                ],
+                "description": "Delete a message. Message should be a DRAFT and Calling user should be the sender of the message.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Messages"
+                ],
+                "summary": "Delete a message",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "External identifier of the user",
+                        "name": "X-User-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Room id of the room in which message is added",
+                        "name": "roomID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Message id",
+                        "name": "messageID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "ApiKey": []
+                    }
+                ],
+                "description": "Update a message and return the update message. Message should be a DRAFT and Calling user should be the sender of the message.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Messages"
+                ],
+                "summary": "Update a message",
+                "parameters": [
+                    {
+                        "description": "Message Request",
+                        "name": "message",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.MessageBody"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "External identifier of the user",
+                        "name": "X-User-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Room id of the room in which message is added",
+                        "name": "roomID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Message id",
+                        "name": "messageID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.MessageResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/users": {
             "get": {
                 "security": [
@@ -419,6 +626,60 @@
         }
     },
     "definitions": {
+        "entities.Message": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "description": "Message content",
+                    "type": "string",
+                    "example": "Hello"
+                },
+                "createdAt": {
+                    "description": "Time when entity was created",
+                    "type": "string",
+                    "example": "2025-02-08T14:13:39.080551Z"
+                },
+                "deletedAt": {
+                    "description": "Time when entity was deleted",
+                    "type": "string",
+                    "example": "2025-02-08T14:13:39.080551Z"
+                },
+                "id": {
+                    "description": "Unique identifier of the message",
+                    "type": "string",
+                    "example": "89e48f30"
+                },
+                "modifiedAt": {
+                    "description": "Time when entity was modified",
+                    "type": "string",
+                    "example": "2025-02-08T14:13:39.080551Z"
+                },
+                "roomID": {
+                    "description": "Unique identifier of the room that message is added to",
+                    "type": "string",
+                    "example": "89e47f30"
+                },
+                "senderID": {
+                    "description": "Unique identifier of the user that created the message",
+                    "type": "string",
+                    "example": "89e46f30"
+                },
+                "sentAt": {
+                    "description": "Time when the message was sent. Is null for Drafts",
+                    "type": "string",
+                    "example": "2025-02-08T14:13:39.080551Z"
+                },
+                "status": {
+                    "description": "Status of the message",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/message.Status"
+                        }
+                    ],
+                    "example": "SENT"
+                }
+            }
+        },
         "entities.Room": {
             "type": "object",
             "properties": {
@@ -563,6 +824,49 @@
                 }
             }
         },
+        "handlers.MessageBody": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "description": "Message content",
+                    "type": "string",
+                    "example": "Hello"
+                },
+                "status": {
+                    "description": "Message status",
+                    "default": "DRAFT",
+                    "enum": [
+                        "DRAFT",
+                        "SENT"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/message.Status"
+                        }
+                    ],
+                    "example": "SENT"
+                }
+            }
+        },
+        "handlers.MessageResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/entities.Message"
+                }
+            }
+        },
+        "handlers.MessagesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.Message"
+                    }
+                }
+            }
+        },
         "handlers.RoomResponse": {
             "type": "object",
             "properties": {
@@ -620,6 +924,17 @@
                     }
                 }
             }
+        },
+        "message.Status": {
+            "type": "string",
+            "enum": [
+                "DRAFT",
+                "SENT"
+            ],
+            "x-enum-varnames": [
+                "StatusDraft",
+                "StatusSent"
+            ]
         },
         "roommember.Role": {
             "type": "string",

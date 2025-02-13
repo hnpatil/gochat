@@ -1,4 +1,44 @@
 definitions:
+  entities.Message:
+    properties:
+      content:
+        description: Message content
+        example: Hello
+        type: string
+      createdAt:
+        description: Time when entity was created
+        example: "2025-02-08T14:13:39.080551Z"
+        type: string
+      deletedAt:
+        description: Time when entity was deleted
+        example: "2025-02-08T14:13:39.080551Z"
+        type: string
+      id:
+        description: Unique identifier of the message
+        example: 89e48f30
+        type: string
+      modifiedAt:
+        description: Time when entity was modified
+        example: "2025-02-08T14:13:39.080551Z"
+        type: string
+      roomID:
+        description: Unique identifier of the room that message is added to
+        example: 89e47f30
+        type: string
+      senderID:
+        description: Unique identifier of the user that created the message
+        example: 89e46f30
+        type: string
+      sentAt:
+        description: Time when the message was sent. Is null for Drafts
+        example: "2025-02-08T14:13:39.080551Z"
+        type: string
+      status:
+        allOf:
+        - $ref: '#/definitions/message.Status'
+        description: Status of the message
+        example: SENT
+    type: object
   entities.Room:
     properties:
       createdAt:
@@ -107,6 +147,34 @@ definitions:
     required:
     - members
     type: object
+  handlers.MessageBody:
+    properties:
+      content:
+        description: Message content
+        example: Hello
+        type: string
+      status:
+        allOf:
+        - $ref: '#/definitions/message.Status'
+        default: DRAFT
+        description: Message status
+        enum:
+        - DRAFT
+        - SENT
+        example: SENT
+    type: object
+  handlers.MessageResponse:
+    properties:
+      data:
+        $ref: '#/definitions/entities.Message'
+    type: object
+  handlers.MessagesResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/entities.Message'
+        type: array
+    type: object
   handlers.RoomResponse:
     properties:
       data:
@@ -145,6 +213,14 @@ definitions:
           $ref: '#/definitions/entities.User'
         type: array
     type: object
+  message.Status:
+    enum:
+    - DRAFT
+    - SENT
+    type: string
+    x-enum-varnames:
+    - StatusDraft
+    - StatusSent
   roommember.Role:
     enum:
     - ADMIN
@@ -315,6 +391,146 @@ paths:
       summary: Update a room
       tags:
       - Rooms
+  /v1/rooms/{roomID}/messages:
+    get:
+      consumes:
+      - application/json
+      description: List messages in a room. Returns all SENT messages in the room
+        along with drafts created by the calling user in descending order of modified
+        time. Calling user should be a member in the room.
+      parameters:
+      - description: External identifier of the user
+        in: header
+        name: X-User-ID
+        required: true
+        type: string
+      - description: Room id of the room in which message is added
+        in: path
+        name: roomID
+        required: true
+        type: string
+      - description: Modified date time upto which messages should be returned
+        in: query
+        name: modifiedBefore
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.MessagesResponse'
+      security:
+      - ApiKey: []
+      summary: List messages
+      tags:
+      - Messages
+    post:
+      consumes:
+      - application/json
+      description: Create a message in the specified room and return the created message.
+        Calling user should be a member in the room. Calling user is added as message
+        sender.
+      parameters:
+      - description: Message Request
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.MessageBody'
+      - description: External identifier of the user
+        in: header
+        name: X-User-ID
+        required: true
+        type: string
+      - description: Room id of the room in which message is added
+        in: path
+        name: roomID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.MessageResponse'
+      security:
+      - ApiKey: []
+      summary: Create a message
+      tags:
+      - Messages
+  /v1/rooms/{roomID}/messages/messageID:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a message. Message should be a DRAFT and Calling user should
+        be the sender of the message.
+      parameters:
+      - description: External identifier of the user
+        in: header
+        name: X-User-ID
+        required: true
+        type: string
+      - description: Room id of the room in which message is added
+        in: path
+        name: roomID
+        required: true
+        type: string
+      - description: Message id
+        in: path
+        name: messageID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+      security:
+      - ApiKey: []
+      summary: Delete a message
+      tags:
+      - Messages
+    patch:
+      consumes:
+      - application/json
+      description: Update a message and return the update message. Message should
+        be a DRAFT and Calling user should be the sender of the message.
+      parameters:
+      - description: Message Request
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.MessageBody'
+      - description: External identifier of the user
+        in: header
+        name: X-User-ID
+        required: true
+        type: string
+      - description: Room id of the room in which message is added
+        in: path
+        name: roomID
+        required: true
+        type: string
+      - description: Message id
+        in: path
+        name: messageID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.MessageResponse'
+      security:
+      - ApiKey: []
+      summary: Update a message
+      tags:
+      - Messages
   /v1/users:
     delete:
       consumes:

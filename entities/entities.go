@@ -21,12 +21,12 @@ type User struct {
 
 type Message struct {
 	Entity
-	ID       uuid.UUID      `json:"id,omitempty"`
-	RoomID   string         `json:"roomID,omitempty"`
-	SenderID string         `json:"senderID,omitempty"`
-	SentAt   *time.Time     `json:"sentAt,omitempty"`
-	Status   message.Status `json:"status,omitempty"`
-	Content  string         `json:"content,omitempty"`
+	ID       uuid.UUID      `json:"id,omitempty" example:"89e48f30"`                        //Unique identifier of the message
+	RoomID   string         `json:"roomID,omitempty" example:"89e47f30"`                    //Unique identifier of the room that message is added to
+	SenderID string         `json:"senderID,omitempty" example:"89e46f30"`                  //Unique identifier of the user that created the message
+	SentAt   *time.Time     `json:"sentAt,omitempty" example:"2025-02-08T14:13:39.080551Z"` //Time when the message was sent. Is null for Drafts
+	Status   message.Status `json:"status,omitempty" example:"SENT"`                        //Status of the message
+	Content  string         `json:"content,omitempty" example:"Hello"`                      //Message content
 }
 
 type Room struct {
