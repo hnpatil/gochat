@@ -4,45 +4,45 @@ import "gofr.dev/pkg/gofr/migration"
 
 const (
 	createUsers = `create table users(
-      id TEXT PRIMARY KEY,
+      id VARCHAR(36) PRIMARY KEY,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       modified_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      deleted_at TIMESTAMP,
-      name TEXT NOT NULL
+      metadata jsonb DEFAULT '{}'
 	);`
 
 	createRooms = `create table rooms(
-      id TEXT PRIMARY KEY,
+      id VARCHAR(36) PRIMARY KEY,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       modified_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      deleted_at TIMESTAMP,
-      name TEXT NOT NULL,
-      is_group BOOLEAN NOT NULL DEFAULT FALSE
+      metadata jsonb DEFAULT '{}'
 	);`
 
 	createRoomMembers = `CREATE TABLE room_members (
-		room_id TEXT NOT NULL,
-		user_id TEXT NOT NULL,
-		role TEXT NOT NULL,
+		room_id VARCHAR(36) NOT NULL,
+		user_id VARCHAR(36) NOT NULL,
+		role VARCHAR(12) NOT NULL CHECK (role IN ('ADMIN', 'MEMBER')),
 		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		modified_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		PRIMARY KEY (room_id, user_id),
 		FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
 		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   	);`
 
 	createMessages = `CREATE TABLE messages (
-		id UUID PRIMARY KEY,
+		id VARCHAR(8),
 		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		modified_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		deleted_at TIMESTAMP,
-		room_id TEXT NOT NULL,
-		sender_id TEXT NOT NULL,
+		room_id VARCHAR(36) NOT NULL,
+		sender_id VARCHAR(36) NOT NULL,
 		sent_at TIMESTAMP,
-		status TEXT NOT NULL,
 		content TEXT NOT NULL,
+		PRIMARY KEY (room_id, id),
 		FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
 		FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE SET NULL
 	);`
+
+	createModifiedAtIndexOnMessages = "CREATE INDEX idx_messages_modified_at ON messages(modified_at);"
+	createModifiedAtIndexOnRooms    = "CREATE INDEX idx_rooms_modified_at ON rooms(modified_at);"
 )
 
 func All() map[int64]migration.Migrate {
@@ -51,6 +51,8 @@ func All() map[int64]migration.Migrate {
 		20250105030000: executeMigration(createRooms),
 		20250105040000: executeMigration(createRoomMembers),
 		20250105050000: executeMigration(createMessages),
+		20250105060000: executeMigration(createModifiedAtIndexOnMessages),
+		20250105070000: executeMigration(createModifiedAtIndexOnRooms),
 	}
 }
 

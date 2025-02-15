@@ -56,10 +56,7 @@ func registerRoutes(app *gofr.App, user handlers.User, room handlers.Room, messa
 	app.GET("/v1/rooms", lofr.Handler(room.List))
 	app.PATCH("/v1/rooms/{id}", lofr.Handler(room.Update))
 	app.GET("/v1/rooms/{id}", lofr.Handler(room.Get))
-	app.DELETE("/v1/rooms/{id}", lofr.Handler(room.Delete))
 
 	app.POST("/v1/rooms/{roomID}/messages", lofr.Handler(message.Create))
 	app.GET("/v1/rooms/{roomID}/messages", lofr.Handler(message.List))
-	app.PATCH("/v1/rooms/{roomID}/messages/{messageID}", lofr.Handler(message.Update))
-	app.DELETE("/v1/rooms/{roomID}/messages/{messageID}", lofr.Handler(message.Delete))
 }

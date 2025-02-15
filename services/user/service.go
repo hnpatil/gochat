@@ -2,6 +2,7 @@ package user
 
 import (
 	"github.com/hnpatil/gochat/entities"
+	"github.com/hnpatil/gochat/pkg/metadata"
 	"github.com/hnpatil/gochat/repos"
 	"github.com/hnpatil/gochat/services"
 	"gofr.dev/pkg/gofr"
@@ -16,11 +17,27 @@ func New(repo repos.User) services.User {
 }
 
 func (s *svc) Create(ctx *gofr.Context, req *services.CreateUser) (*entities.User, error) {
-	return s.repo.Create(ctx, &entities.User{Name: req.Name, ID: req.ID})
+	usr := &entities.User{
+		ID:       req.ID,
+		Metadata: req.Metadata,
+	}
+
+	return s.repo.Create(ctx, usr)
 }
 
 func (s *svc) Update(ctx *gofr.Context, req *services.UpdateUser) (*entities.User, error) {
-	return s.repo.Update(ctx, &entities.User{ID: req.ID}, &entities.User{Name: req.Name})
+	usr, err := s.repo.Get(ctx, &entities.User{ID: req.ID})
+	if err != nil {
+		return nil, err
+	}
+
+	usrUpdate := &entities.User{}
+	usrUpdate.Metadata, err = metadata.ApplyPatch(usr.Metadata, req.Metadata)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.repo.Update(ctx, &entities.User{ID: req.ID}, usrUpdate)
 }
 
 func (s *svc) Get(ctx *gofr.Context, req *services.GetUser) (*entities.User, error) {

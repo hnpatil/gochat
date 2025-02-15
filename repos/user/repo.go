@@ -18,13 +18,18 @@ func New() repos.User {
 }
 
 func (u *userRepo) Create(ctx *gofr.Context, request *entities.User) (*entities.User, error) {
+	meta, err := request.Metadata.Marshall()
+	if err != nil {
+		return nil, err
+	}
+
 	query, args := sqlbuilder.NewInsertBuilder().
 		InsertInto(user.Table).
-		Cols(user.FieldID, user.FieldName).
-		Values(request.ID, request.Name).
+		Cols(user.FieldID, user.FieldMetaData).
+		Values(request.ID, meta).
 		Build()
 
-	_, err := ctx.SQL.ExecContext(ctx, query, args...)
+	_, err = ctx.SQL.ExecContext(ctx, query, args...)
 	if err != nil {
 		return nil, repos.Error(err, user.Entity)
 	}
@@ -36,8 +41,13 @@ func (u *userRepo) Update(ctx *gofr.Context, filter, request *entities.User) (*e
 	sb := sqlbuilder.NewUpdateBuilder()
 	sets := []string{sb.Assign(user.FieldModifiedAt, time.Now())}
 
-	if request.Name != "" {
-		sets = append(sets, sb.Assign(user.FieldName, request.Name))
+	if request.Metadata != nil {
+		meta, err := request.Metadata.Marshall()
+		if err != nil {
+			return nil, repos.Error(err, user.Entity)
+		}
+
+		sets = append(sets, sb.Assign(user.FieldMetaData, meta))
 	}
 
 	query, args := sb.Update(user.Table).Set(sets...).Where(sb.Equal(user.FieldID, filter.ID)).Build()
@@ -62,7 +72,7 @@ func (u *userRepo) Update(ctx *gofr.Context, filter, request *entities.User) (*e
 func (u *userRepo) Get(ctx *gofr.Context, filter *entities.User) (*entities.User, error) {
 	sb := sqlbuilder.NewSelectBuilder()
 	query, args := sb.Select(
-		user.FieldID, user.FieldName, user.FieldCreatedAt, user.FieldModifiedAt, user.FieldDeletedAt).
+		user.FieldID, user.FieldCreatedAt, user.FieldModifiedAt, user.FieldMetaData).
 		From(user.Table).Where(sb.Equal(user.FieldID, filter.ID)).Build()
 
 	row := ctx.SQL.QueryRowContext(ctx, query, args...)
@@ -71,8 +81,14 @@ func (u *userRepo) Get(ctx *gofr.Context, filter *entities.User) (*entities.User
 	}
 
 	usr := &entities.User{}
+	metaBytes := []byte{}
 
-	err := row.Scan(&usr.ID, &usr.Name, &usr.CreatedAt, &usr.ModifiedAt, &usr.DeletedAt)
+	err := row.Scan(&usr.ID, &usr.CreatedAt, &usr.ModifiedAt, &metaBytes)
+	if err != nil {
+		return nil, repos.Error(err, user.Entity)
+	}
+
+	err = usr.Metadata.UnMarshall(metaBytes)
 	if err != nil {
 		return nil, repos.Error(err, user.Entity)
 	}
@@ -82,7 +98,7 @@ func (u *userRepo) Get(ctx *gofr.Context, filter *entities.User) (*entities.User
 
 func (u *userRepo) List(ctx *gofr.Context, filter *repos.UserFilter) ([]*entities.User, error) {
 	sb := sqlbuilder.NewSelectBuilder().
-		Select(user.FieldID, user.FieldName, user.FieldCreatedAt, user.FieldModifiedAt, user.FieldDeletedAt).
+		Select(user.FieldID, user.FieldCreatedAt, user.FieldModifiedAt, user.FieldMetaData).
 		From(user.Table)
 
 	size := 20
@@ -115,7 +131,13 @@ func (u *userRepo) List(ctx *gofr.Context, filter *repos.UserFilter) ([]*entitie
 
 	for rows.Next() {
 		usr := &entities.User{}
-		err = rows.Scan(&usr.ID, &usr.Name, &usr.CreatedAt, &usr.ModifiedAt, &usr.DeletedAt)
+		metaBytes := []byte{}
+		err = rows.Scan(&usr.ID, &usr.CreatedAt, &usr.ModifiedAt, &metaBytes)
+		if err != nil {
+			return nil, repos.Error(err, user.Entity)
+		}
+
+		err = usr.Metadata.UnMarshall(metaBytes)
 		if err != nil {
 			return nil, repos.Error(err, user.Entity)
 		}

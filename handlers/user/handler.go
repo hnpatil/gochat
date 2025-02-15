@@ -28,7 +28,7 @@ func New(svc services.User) handlers.User {
 // @Success 201 {object} handlers.UserResponse
 // @Router /v1/users [post]
 func (h *handler) Create(ctx *gofr.Context, req *handlers.CreateUser) (*entities.User, error) {
-	return h.svc.Create(ctx, &services.CreateUser{ID: req.UserID, Name: req.Name})
+	return h.svc.Create(ctx, &services.CreateUser{ID: req.UserID, Metadata: req.Metadata})
 }
 
 // @Summary Update a user
@@ -42,7 +42,7 @@ func (h *handler) Create(ctx *gofr.Context, req *handlers.CreateUser) (*entities
 // @Success 200 {object} handlers.UserResponse
 // @Router /v1/users [patch]
 func (h *handler) Update(ctx *gofr.Context, req *handlers.UpdateUser) (*entities.User, error) {
-	return h.svc.Update(ctx, &services.UpdateUser{ID: req.UserID, Name: req.Name})
+	return h.svc.Update(ctx, &services.UpdateUser{ID: req.UserID, Metadata: req.Metadata})
 }
 
 // @Summary List users

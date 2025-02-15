@@ -16,6 +16,6 @@ type RoomFilter struct {
 }
 
 type MessageFilter struct {
-	ModifiedBefore time.Time
-	RoomID         string
+	CreatedBefore time.Time
+	RoomID        string
 }

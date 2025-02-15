@@ -2,9 +2,11 @@ package room
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/hnpatil/gochat/entities"
 	"github.com/hnpatil/gochat/entities/room"
 	"github.com/hnpatil/gochat/entities/roommember"
+	"github.com/hnpatil/gochat/entities/user"
 	"github.com/hnpatil/gochat/repos"
 	"github.com/huandu/go-sqlbuilder"
 	"gofr.dev/pkg/gofr"
@@ -13,6 +15,7 @@ import (
 )
 
 type roomRepo struct {
+	usersRepo repos.User
 }
 
 func New() repos.Room {
@@ -25,10 +28,15 @@ func (r *roomRepo) Create(ctx *gofr.Context, request *entities.Room) (*entities.
 		return nil, repos.Error(err, room.Entity)
 	}
 
+	metaBytes, err := request.Metadata.Marshall()
+	if err != nil {
+		return nil, repos.Error(err, room.Entity)
+	}
+
 	query, args := sqlbuilder.NewInsertBuilder().
 		InsertInto(room.Table).
-		Cols(room.FieldID, room.FieldName, room.FieldIsGroup).
-		Values(request.ID, request.Name, request.IsGroup).
+		Cols(room.FieldID, room.FieldMetaData).
+		Values(request.ID, metaBytes).
 		Build()
 
 	_, err = tx.ExecContext(ctx.Context, query, args...)
@@ -61,8 +69,13 @@ func (r *roomRepo) Update(ctx *gofr.Context, filter, request *entities.Room) (*e
 	sb := sqlbuilder.NewUpdateBuilder()
 	sets := []string{sb.Assign(room.FieldModifiedAt, time.Now())}
 
-	if request.Name != "" {
-		sets = append(sets, sb.Assign(room.FieldName, request.Name))
+	if request.Metadata != nil {
+		metaBytes, err := request.Metadata.Marshall()
+		if err != nil {
+			return nil, repos.Error(err, room.Entity)
+		}
+
+		sets = append(sets, sb.Assign(room.FieldMetaData, metaBytes))
 	}
 
 	query, args := sb.Update(room.Table).Set(sets...).Where(sb.Equal(room.FieldID, filter.ID)).Build()
@@ -87,7 +100,7 @@ func (r *roomRepo) Update(ctx *gofr.Context, filter, request *entities.Room) (*e
 func (r *roomRepo) Get(ctx *gofr.Context, filter *entities.Room) (*entities.Room, error) {
 	sb := sqlbuilder.NewSelectBuilder()
 	query, args := sb.Select(
-		room.FieldID, room.FieldName, room.FieldIsGroup, room.FieldCreatedAt, room.FieldModifiedAt, room.FieldDeletedAt).
+		room.FieldID, room.FieldCreatedAt, room.FieldModifiedAt, room.FieldMetaData).
 		From(room.Table).Where(sb.Equal(room.FieldID, filter.ID)).
 		Build()
 
@@ -97,8 +110,14 @@ func (r *roomRepo) Get(ctx *gofr.Context, filter *entities.Room) (*entities.Room
 	}
 
 	rm := &entities.Room{}
+	metaBytes := []byte{}
 
-	err := row.Scan(&rm.ID, &rm.Name, &rm.IsGroup, &rm.CreatedAt, &rm.ModifiedAt, &rm.DeletedAt)
+	err := row.Scan(&rm.ID, &rm.CreatedAt, &rm.ModifiedAt, &metaBytes)
+	if err != nil {
+		return nil, repos.Error(err, room.Entity)
+	}
+
+	err = rm.Metadata.UnMarshall(metaBytes)
 	if err != nil {
 		return nil, repos.Error(err, room.Entity)
 	}
@@ -115,7 +134,7 @@ func (r *roomRepo) Get(ctx *gofr.Context, filter *entities.Room) (*entities.Room
 
 func (r *roomRepo) List(ctx *gofr.Context, filter *repos.RoomFilter) ([]*entities.Room, error) {
 	sb := sqlbuilder.NewSelectBuilder().Select(
-		room.FieldID, room.FieldName, room.FieldIsGroup, room.FieldCreatedAt, room.FieldModifiedAt, room.FieldDeletedAt).
+		room.FieldID, room.FieldCreatedAt, room.FieldModifiedAt, room.FieldMetaData).
 		From(room.Table)
 
 	if filter.UserID != "" {
@@ -149,7 +168,13 @@ func (r *roomRepo) List(ctx *gofr.Context, filter *repos.RoomFilter) ([]*entitie
 
 	for rows.Next() {
 		rm := &entities.Room{}
-		err = rows.Scan(&rm.ID, &rm.Name, &rm.IsGroup, &rm.CreatedAt, &rm.ModifiedAt, &rm.DeletedAt)
+		metaBytes := []byte{}
+		err = rows.Scan(&rm.ID, &rm.CreatedAt, &rm.ModifiedAt, &metaBytes)
+		if err != nil {
+			return nil, repos.Error(err, room.Entity)
+		}
+
+		err = rm.Metadata.UnMarshall(metaBytes)
 		if err != nil {
 			return nil, repos.Error(err, room.Entity)
 		}
@@ -177,38 +202,29 @@ func (r *roomRepo) List(ctx *gofr.Context, filter *repos.RoomFilter) ([]*entitie
 	return rooms, nil
 }
 
-func (r *roomRepo) Delete(ctx *gofr.Context, filter *entities.Room) error {
-	sb := sqlbuilder.NewDeleteBuilder()
-	query, args := sb.DeleteFrom(room.Table).Where(sb.Equal(room.FieldID, filter.ID)).Build()
-
-	res, err := ctx.SQL.ExecContext(ctx, query, args...)
-	if err != nil {
-		return repos.Error(err, room.Entity)
-	}
-
-	n, err := res.RowsAffected()
-	if err != nil {
-		return repos.Error(err, room.Entity)
-	}
-
-	if n == 0 {
-		return repos.Error(sql.ErrNoRows, room.Entity)
-	}
-
-	return nil
-}
-
 func (r *roomRepo) getRoomMembers(ctx *gofr.Context, roomIDs []string) (map[string][]*entities.RoomMember, error) {
 	ids := make([]interface{}, len(roomIDs))
 	for i, id := range roomIDs {
 		ids[i] = id
 	}
 
+	if len(ids) == 0 {
+		return map[string][]*entities.RoomMember{}, nil
+	}
+
 	sb := sqlbuilder.NewSelectBuilder()
 	query, args := sb.
-		Select(roommember.FieldRoomID, roommember.FieldUserID, roommember.FieldRole, roommember.FieldCreatedAt).
+		Select(
+			roommember.FieldRoomID, roommember.FieldUserID, roommember.FieldRole,
+			fmt.Sprintf("%s.%s", roommember.Table, roommember.FieldCreatedAt),
+			fmt.Sprintf("%s.%s", roommember.Table, roommember.FieldModifiedAt), user.FieldID,
+			fmt.Sprintf("%s.%s", user.Table, user.FieldCreatedAt),
+			fmt.Sprintf("%s.%s", user.Table, user.FieldModifiedAt), user.FieldMetaData,
+		).
 		From(roommember.Table).
+		Join(user.Table, fmt.Sprintf("%s.%s = %s.%s", user.Table, user.FieldID, roommember.Table, roommember.FieldUserID)).
 		Where(sb.In(roommember.FieldRoomID, ids...)).
+		Limit(20).
 		Build()
 
 	rows, err := ctx.SQL.QueryContext(ctx, query, args...)
@@ -225,12 +241,21 @@ func (r *roomRepo) getRoomMembers(ctx *gofr.Context, roomIDs []string) (map[stri
 
 	for rows.Next() {
 		member := &entities.RoomMember{}
+		usr := &entities.User{}
+		metaBytes := []byte{}
 
-		err = rows.Scan(&member.RoomID, &member.UserID, &member.Role, &member.CreatedAt)
+		err = rows.Scan(&member.RoomID, &member.UserID, &member.Role, &member.CreatedAt, &member.ModifiedAt,
+			&usr.ID, &usr.CreatedAt, &usr.ModifiedAt, &metaBytes)
 		if err != nil {
 			return nil, err
 		}
 
+		err = usr.Metadata.UnMarshall(metaBytes)
+		if err != nil {
+			return nil, repos.Error(err, user.Entity)
+		}
+
+		member.User = usr
 		membersMap[member.RoomID] = append(membersMap[member.RoomID], member)
 	}
 

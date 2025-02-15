@@ -9,10 +9,6 @@ definitions:
         description: Time when entity was created
         example: "2025-02-08T14:13:39.080551Z"
         type: string
-      deletedAt:
-        description: Time when entity was deleted
-        example: "2025-02-08T14:13:39.080551Z"
-        type: string
       id:
         description: Unique identifier of the message
         example: 89e48f30
@@ -29,15 +25,6 @@ definitions:
         description: Unique identifier of the user that created the message
         example: 89e46f30
         type: string
-      sentAt:
-        description: Time when the message was sent. Is null for Drafts
-        example: "2025-02-08T14:13:39.080551Z"
-        type: string
-      status:
-        allOf:
-        - $ref: '#/definitions/message.Status'
-        description: Status of the message
-        example: SENT
     type: object
   entities.Room:
     properties:
@@ -45,40 +32,28 @@ definitions:
         description: Time when entity was created
         example: "2025-02-08T14:13:39.080551Z"
         type: string
-      deletedAt:
-        description: Time when entity was deleted
-        example: "2025-02-08T14:13:39.080551Z"
-        type: string
       id:
         description: Unique identifier of the room
         example: 89e47f30
         type: string
-      isGroup:
-        description: Indicates if the room is a group. Is false for chats.
-        example: true
-        type: boolean
       members:
         description: List of room members
         items:
           $ref: '#/definitions/entities.RoomMember'
         type: array
+      metadata:
+        allOf:
+        - $ref: '#/definitions/metadata.Metadata'
+        description: Room meta data
       modifiedAt:
         description: Time when entity was modified
         example: "2025-02-08T14:13:39.080551Z"
-        type: string
-      name:
-        description: Name of the room
-        example: Friends
         type: string
     type: object
   entities.RoomMember:
     properties:
       createdAt:
         description: Time when entity was created
-        example: "2025-02-08T14:13:39.080551Z"
-        type: string
-      deletedAt:
-        description: Time when entity was deleted
         example: "2025-02-08T14:13:39.080551Z"
         type: string
       modifiedAt:
@@ -89,14 +64,15 @@ definitions:
         allOf:
         - $ref: '#/definitions/roommember.Role'
         description: Role defines permissions of user on the room.
-        enum:
-        - ADMIN
-        - MEMBER
         example: ADMIN
       roomID:
         description: Unique identifier of the room
         example: 89e47f30
         type: string
+      user:
+        allOf:
+        - $ref: '#/definitions/entities.User'
+        description: User object associated with member
       userID:
         description: External identifier of the user
         example: 89e46f30
@@ -108,25 +84,26 @@ definitions:
         description: Time when entity was created
         example: "2025-02-08T14:13:39.080551Z"
         type: string
-      deletedAt:
-        description: Time when entity was deleted
-        example: "2025-02-08T14:13:39.080551Z"
-        type: string
       id:
         description: External identifier of the user
         example: 89e46f30
         type: string
+      metadata:
+        allOf:
+        - $ref: '#/definitions/metadata.Metadata'
+        description: Metadata associated with the user
       modifiedAt:
         description: Time when entity was modified
         example: "2025-02-08T14:13:39.080551Z"
         type: string
-      name:
-        description: Name of the user
-        example: John Doe
-        type: string
     type: object
   handlers.CreateRoomBody:
     properties:
+      id:
+        description: Optional unique identifier of the room. A default UID is created
+          if not present
+        example: 89e47f30
+        type: string
       members:
         description: List of user ids of room members.
         example:
@@ -135,15 +112,10 @@ definitions:
         items:
           type: string
         type: array
-      name:
-        description: Optional group name
-        example: Friends
-        type: string
-      roomID:
-        description: Optional unique identifier of the room. A default UID is created
-          if not present
-        example: 89e47f30
-        type: string
+      metadata:
+        allOf:
+        - $ref: '#/definitions/metadata.Metadata'
+        description: Room metadata
     required:
     - members
     type: object
@@ -153,15 +125,6 @@ definitions:
         description: Message content
         example: Hello
         type: string
-      status:
-        allOf:
-        - $ref: '#/definitions/message.Status'
-        default: DRAFT
-        description: Message status
-        enum:
-        - DRAFT
-        - SENT
-        example: SENT
     type: object
   handlers.MessageResponse:
     properties:
@@ -189,17 +152,17 @@ definitions:
     type: object
   handlers.UpdateRoomBody:
     properties:
-      name:
-        description: Updated group name
-        example: Friends
-        type: string
+      metadata:
+        allOf:
+        - $ref: '#/definitions/metadata.Metadata'
+        description: Room metadata
     type: object
   handlers.UserBody:
     properties:
-      name:
-        description: Name of the user
-        example: John Doe
-        type: string
+      metadata:
+        allOf:
+        - $ref: '#/definitions/metadata.Metadata'
+        description: User Metadata
     type: object
   handlers.UserResponse:
     properties:
@@ -213,14 +176,9 @@ definitions:
           $ref: '#/definitions/entities.User'
         type: array
     type: object
-  message.Status:
-    enum:
-    - DRAFT
-    - SENT
-    type: string
-    x-enum-varnames:
-    - StatusDraft
-    - StatusSent
+  metadata.Metadata:
+    additionalProperties: true
+    type: object
   roommember.Role:
     enum:
     - ADMIN
@@ -305,31 +263,6 @@ paths:
       tags:
       - Rooms
   /v1/rooms/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete a room. Calling user should be an ADMIN in the room.
-      parameters:
-      - description: External identifier of the user
-        in: header
-        name: X-User-ID
-        required: true
-        type: string
-      - description: Room ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: No Content
-      security:
-      - ApiKey: []
-      summary: Delete a room
-      tags:
-      - Rooms
     get:
       consumes:
       - application/json
@@ -411,7 +344,7 @@ paths:
         type: string
       - description: Modified date time upto which messages should be returned
         in: query
-        name: modifiedBefore
+        name: createdBefore
         type: string
       produces:
       - application/json
@@ -458,77 +391,6 @@ paths:
       security:
       - ApiKey: []
       summary: Create a message
-      tags:
-      - Messages
-  /v1/rooms/{roomID}/messages/messageID:
-    delete:
-      consumes:
-      - application/json
-      description: Delete a message. Message should be a DRAFT and Calling user should
-        be the sender of the message.
-      parameters:
-      - description: External identifier of the user
-        in: header
-        name: X-User-ID
-        required: true
-        type: string
-      - description: Room id of the room in which message is added
-        in: path
-        name: roomID
-        required: true
-        type: string
-      - description: Message id
-        in: path
-        name: messageID
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: No Content
-      security:
-      - ApiKey: []
-      summary: Delete a message
-      tags:
-      - Messages
-    patch:
-      consumes:
-      - application/json
-      description: Update a message and return the update message. Message should
-        be a DRAFT and Calling user should be the sender of the message.
-      parameters:
-      - description: Message Request
-        in: body
-        name: message
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.MessageBody'
-      - description: External identifier of the user
-        in: header
-        name: X-User-ID
-        required: true
-        type: string
-      - description: Room id of the room in which message is added
-        in: path
-        name: roomID
-        required: true
-        type: string
-      - description: Message id
-        in: path
-        name: messageID
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handlers.MessageResponse'
-      security:
-      - ApiKey: []
-      summary: Update a message
       tags:
       - Messages
   /v1/users:

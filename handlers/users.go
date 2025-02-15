@@ -1,6 +1,9 @@
 package handlers
 
-import "github.com/hnpatil/gochat/entities"
+import (
+	"github.com/hnpatil/gochat/entities"
+	"github.com/hnpatil/gochat/pkg/metadata"
+)
 
 type UserRequest struct {
 	UserID string `header:"X-User-Id" validate:"required"`
@@ -12,7 +15,7 @@ type CreateUser struct {
 }
 
 type UserBody struct {
-	Name string `json:"name,omitempty" example:"John Doe"` //Name of the user
+	Metadata metadata.Metadata `json:"metadata,omitempty"` //User Metadata
 }
 
 type UpdateUser struct {

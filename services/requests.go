@@ -1,19 +1,18 @@
 package services
 
 import (
-	"github.com/google/uuid"
-	"github.com/hnpatil/gochat/entities/message"
+	"github.com/hnpatil/gochat/pkg/metadata"
 	"time"
 )
 
 type CreateUser struct {
-	ID   string
-	Name string
+	ID       string
+	Metadata metadata.Metadata
 }
 
 type UpdateUser struct {
-	ID   string
-	Name string
+	ID       string
+	Metadata metadata.Metadata
 }
 
 type GetUser struct {
@@ -31,16 +30,16 @@ type ListUsers struct {
 }
 
 type CreateRoom struct {
-	RoomID  string
-	UserID  string
-	Name    string
-	Members []string
+	RoomID   string
+	UserID   string
+	Metadata metadata.Metadata
+	Members  []string
 }
 
 type UpdateRoom struct {
-	UserID string
-	RoomID string
-	Name   string
+	UserID   string
+	RoomID   string
+	Metadata metadata.Metadata
 }
 
 type GetRoom struct {
@@ -55,37 +54,14 @@ type ListRoom struct {
 	Size    int
 }
 
-type DeleteRoom struct {
-	RoomID string
-	UserID string
-}
-
 type CreateMessage struct {
 	UserID  string
 	RoomID  string
-	Status  message.Status
 	Content string
 }
 
-type UpdateMessage struct {
-	UserID    string
-	RoomID    string
-	MessageID uuid.UUID
-	Status    message.Status
-	Content   string
-}
-
-type GetMessage struct {
-}
-
 type ListMessage struct {
-	UserID         string
-	RoomID         string
-	ModifiedBefore time.Time
-}
-
-type DeleteMessage struct {
-	UserID    string
-	RoomID    string
-	MessageID uuid.UUID
+	UserID        string
+	RoomID        string
+	CreatedBefore time.Time
 }

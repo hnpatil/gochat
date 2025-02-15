@@ -18,13 +18,10 @@ type Room interface {
 	Update(ctx *gofr.Context, filter, request *entities.Room) (*entities.Room, error)
 	Get(ctx *gofr.Context, filter *entities.Room) (*entities.Room, error)
 	List(ctx *gofr.Context, filter *RoomFilter) ([]*entities.Room, error)
-	Delete(ctx *gofr.Context, filter *entities.Room) error
 }
 
 type Message interface {
 	Create(ctx *gofr.Context, request *entities.Message) (*entities.Message, error)
-	Update(ctx *gofr.Context, filter, request *entities.Message) (*entities.Message, error)
 	Get(ctx *gofr.Context, filter *entities.Message) (*entities.Message, error)
 	List(ctx *gofr.Context, filter *MessageFilter) ([]*entities.Message, error)
-	Delete(ctx *gofr.Context, filter *entities.Message) error
 }

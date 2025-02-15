@@ -167,45 +167,6 @@ const docTemplate = `{
                     }
                 }
             },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKey": []
-                    }
-                ],
-                "description": "Delete a room. Calling user should be an ADMIN in the room.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Rooms"
-                ],
-                "summary": "Delete a room",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "External identifier of the user",
-                        "name": "X-User-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Room ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No Content"
-                    }
-                }
-            },
             "patch": {
                 "security": [
                     {
@@ -294,7 +255,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Modified date time upto which messages should be returned",
-                        "name": "modifiedBefore",
+                        "name": "createdBefore",
                         "in": "query"
                     }
                 ],
@@ -352,112 +313,6 @@ const docTemplate = `{
                 "responses": {
                     "201": {
                         "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.MessageResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/rooms/{roomID}/messages/messageID": {
-            "delete": {
-                "security": [
-                    {
-                        "ApiKey": []
-                    }
-                ],
-                "description": "Delete a message. Message should be a DRAFT and Calling user should be the sender of the message.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Messages"
-                ],
-                "summary": "Delete a message",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "External identifier of the user",
-                        "name": "X-User-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Room id of the room in which message is added",
-                        "name": "roomID",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Message id",
-                        "name": "messageID",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No Content"
-                    }
-                }
-            },
-            "patch": {
-                "security": [
-                    {
-                        "ApiKey": []
-                    }
-                ],
-                "description": "Update a message and return the update message. Message should be a DRAFT and Calling user should be the sender of the message.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Messages"
-                ],
-                "summary": "Update a message",
-                "parameters": [
-                    {
-                        "description": "Message Request",
-                        "name": "message",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.MessageBody"
-                        }
-                    },
-                    {
-                        "type": "string",
-                        "description": "External identifier of the user",
-                        "name": "X-User-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Room id of the room in which message is added",
-                        "name": "roomID",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Message id",
-                        "name": "messageID",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/handlers.MessageResponse"
                         }
@@ -650,11 +505,6 @@ const docTemplate = `{
                     "type": "string",
                     "example": "2025-02-08T14:13:39.080551Z"
                 },
-                "deletedAt": {
-                    "description": "Time when entity was deleted",
-                    "type": "string",
-                    "example": "2025-02-08T14:13:39.080551Z"
-                },
                 "id": {
                     "description": "Unique identifier of the message",
                     "type": "string",
@@ -674,20 +524,6 @@ const docTemplate = `{
                     "description": "Unique identifier of the user that created the message",
                     "type": "string",
                     "example": "89e46f30"
-                },
-                "sentAt": {
-                    "description": "Time when the message was sent. Is null for Drafts",
-                    "type": "string",
-                    "example": "2025-02-08T14:13:39.080551Z"
-                },
-                "status": {
-                    "description": "Status of the message",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/message.Status"
-                        }
-                    ],
-                    "example": "SENT"
                 }
             }
         },
@@ -699,20 +535,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "2025-02-08T14:13:39.080551Z"
                 },
-                "deletedAt": {
-                    "description": "Time when entity was deleted",
-                    "type": "string",
-                    "example": "2025-02-08T14:13:39.080551Z"
-                },
                 "id": {
                     "description": "Unique identifier of the room",
                     "type": "string",
                     "example": "89e47f30"
-                },
-                "isGroup": {
-                    "description": "Indicates if the room is a group. Is false for chats.",
-                    "type": "boolean",
-                    "example": true
                 },
                 "members": {
                     "description": "List of room members",
@@ -721,15 +547,18 @@ const docTemplate = `{
                         "$ref": "#/definitions/entities.RoomMember"
                     }
                 },
+                "metadata": {
+                    "description": "Room meta data",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/metadata.Metadata"
+                        }
+                    ]
+                },
                 "modifiedAt": {
                     "description": "Time when entity was modified",
                     "type": "string",
                     "example": "2025-02-08T14:13:39.080551Z"
-                },
-                "name": {
-                    "description": "Name of the room",
-                    "type": "string",
-                    "example": "Friends"
                 }
             }
         },
@@ -741,11 +570,6 @@ const docTemplate = `{
                     "type": "string",
                     "example": "2025-02-08T14:13:39.080551Z"
                 },
-                "deletedAt": {
-                    "description": "Time when entity was deleted",
-                    "type": "string",
-                    "example": "2025-02-08T14:13:39.080551Z"
-                },
                 "modifiedAt": {
                     "description": "Time when entity was modified",
                     "type": "string",
@@ -753,10 +577,6 @@ const docTemplate = `{
                 },
                 "role": {
                     "description": "Role defines permissions of user on the room.",
-                    "enum": [
-                        "ADMIN",
-                        "MEMBER"
-                    ],
                     "allOf": [
                         {
                             "$ref": "#/definitions/roommember.Role"
@@ -768,6 +588,14 @@ const docTemplate = `{
                     "description": "Unique identifier of the room",
                     "type": "string",
                     "example": "89e47f30"
+                },
+                "user": {
+                    "description": "User object associated with member",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entities.User"
+                        }
+                    ]
                 },
                 "userID": {
                     "description": "External identifier of the user",
@@ -784,25 +612,23 @@ const docTemplate = `{
                     "type": "string",
                     "example": "2025-02-08T14:13:39.080551Z"
                 },
-                "deletedAt": {
-                    "description": "Time when entity was deleted",
-                    "type": "string",
-                    "example": "2025-02-08T14:13:39.080551Z"
-                },
                 "id": {
                     "description": "External identifier of the user",
                     "type": "string",
                     "example": "89e46f30"
                 },
+                "metadata": {
+                    "description": "Metadata associated with the user",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/metadata.Metadata"
+                        }
+                    ]
+                },
                 "modifiedAt": {
                     "description": "Time when entity was modified",
                     "type": "string",
                     "example": "2025-02-08T14:13:39.080551Z"
-                },
-                "name": {
-                    "description": "Name of the user",
-                    "type": "string",
-                    "example": "John Doe"
                 }
             }
         },
@@ -812,6 +638,11 @@ const docTemplate = `{
                 "members"
             ],
             "properties": {
+                "id": {
+                    "description": "Optional unique identifier of the room. A default UID is created if not present",
+                    "type": "string",
+                    "example": "89e47f30"
+                },
                 "members": {
                     "description": "List of user ids of room members.",
                     "type": "array",
@@ -823,15 +654,13 @@ const docTemplate = `{
                         "89e46f32"
                     ]
                 },
-                "name": {
-                    "description": "Optional group name",
-                    "type": "string",
-                    "example": "Friends"
-                },
-                "roomID": {
-                    "description": "Optional unique identifier of the room. A default UID is created if not present",
-                    "type": "string",
-                    "example": "89e47f30"
+                "metadata": {
+                    "description": "Room metadata",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/metadata.Metadata"
+                        }
+                    ]
                 }
             }
         },
@@ -842,20 +671,6 @@ const docTemplate = `{
                     "description": "Message content",
                     "type": "string",
                     "example": "Hello"
-                },
-                "status": {
-                    "description": "Message status",
-                    "default": "DRAFT",
-                    "enum": [
-                        "DRAFT",
-                        "SENT"
-                    ],
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/message.Status"
-                        }
-                    ],
-                    "example": "SENT"
                 }
             }
         },
@@ -900,20 +715,26 @@ const docTemplate = `{
         "handlers.UpdateRoomBody": {
             "type": "object",
             "properties": {
-                "name": {
-                    "description": "Updated group name",
-                    "type": "string",
-                    "example": "Friends"
+                "metadata": {
+                    "description": "Room metadata",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/metadata.Metadata"
+                        }
+                    ]
                 }
             }
         },
         "handlers.UserBody": {
             "type": "object",
             "properties": {
-                "name": {
-                    "description": "Name of the user",
-                    "type": "string",
-                    "example": "John Doe"
+                "metadata": {
+                    "description": "User Metadata",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/metadata.Metadata"
+                        }
+                    ]
                 }
             }
         },
@@ -936,16 +757,9 @@ const docTemplate = `{
                 }
             }
         },
-        "message.Status": {
-            "type": "string",
-            "enum": [
-                "DRAFT",
-                "SENT"
-            ],
-            "x-enum-varnames": [
-                "StatusDraft",
-                "StatusSent"
-            ]
+        "metadata.Metadata": {
+            "type": "object",
+            "additionalProperties": true
         },
         "roommember.Role": {
             "type": "string",

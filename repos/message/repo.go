@@ -1,13 +1,11 @@
 package message
 
 import (
-	"database/sql"
 	"github.com/hnpatil/gochat/entities"
 	"github.com/hnpatil/gochat/entities/message"
 	"github.com/hnpatil/gochat/repos"
 	"github.com/huandu/go-sqlbuilder"
 	"gofr.dev/pkg/gofr"
-	"time"
 )
 
 type repo struct {
@@ -20,8 +18,8 @@ func New() repos.Message {
 func (r *repo) Create(ctx *gofr.Context, request *entities.Message) (*entities.Message, error) {
 	query, args := sqlbuilder.NewInsertBuilder().
 		InsertInto(message.Table).
-		Cols(message.FieldID, message.FieldRoomID, message.FieldSenderID, message.FieldSentAt, message.FieldStatus, message.FieldContent).
-		Values(request.ID, request.RoomID, request.SenderID, request.SentAt, request.Status, request.Content).
+		Cols(message.FieldID, message.FieldRoomID, message.FieldSenderID, message.FieldContent).
+		Values(request.ID, request.RoomID, request.SenderID, request.Content).
 		Build()
 
 	_, err := ctx.SQL.ExecContext(ctx, query, args...)
@@ -29,51 +27,18 @@ func (r *repo) Create(ctx *gofr.Context, request *entities.Message) (*entities.M
 		return nil, repos.Error(err, message.Entity)
 	}
 
-	return r.Get(ctx, &entities.Message{ID: request.ID})
-}
-
-func (r *repo) Update(ctx *gofr.Context, filter, request *entities.Message) (*entities.Message, error) {
-	sb := sqlbuilder.NewUpdateBuilder()
-	sets := []string{sb.Assign(message.FieldModifiedAt, time.Now())}
-
-	if request.Content != "" {
-		sets = append(sets, sb.Assign(message.FieldContent, request.Content))
-	}
-
-	if request.Status != "" {
-		sets = append(sets, sb.Assign(message.FieldStatus, request.Status))
-	}
-
-	if request.SentAt != nil {
-		sets = append(sets, sb.Assign(message.FieldSentAt, request.SentAt))
-	}
-
-	query, args := sb.Update(message.Table).Set(sets...).Where(sb.Equal(message.FieldID, filter.ID)).Build()
-	res, err := ctx.SQL.ExecContext(ctx, query, args...)
-	if err != nil {
-		return nil, repos.Error(err, message.Entity)
-	}
-
-	n, err := res.RowsAffected()
-	if err != nil {
-		return nil, repos.Error(err, message.Entity)
-	}
-
-	if n == 0 {
-		return nil, repos.Error(sql.ErrNoRows, message.Entity)
-	}
-
-	return r.Get(ctx, &entities.Message{ID: filter.ID})
+	return r.Get(ctx, &entities.Message{RoomID: request.RoomID, ID: request.ID})
 }
 
 func (r *repo) Get(ctx *gofr.Context, filter *entities.Message) (*entities.Message, error) {
 	sb := sqlbuilder.NewSelectBuilder()
 	query, args := sb.
 		Select(
-			message.FieldID, message.FieldRoomID, message.FieldSenderID, message.FieldSentAt, message.FieldStatus,
-			message.FieldContent, message.FieldCreatedAt, message.FieldModifiedAt, message.FieldDeletedAt,
+			message.FieldID, message.FieldRoomID, message.FieldSenderID,
+			message.FieldContent, message.FieldCreatedAt, message.FieldModifiedAt,
 		).
-		From(message.Table).Where(sb.Equal(message.FieldID, filter.ID)).Build()
+		From(message.Table).
+		Where(sb.Equal(message.FieldRoomID, filter.RoomID), sb.Equal(message.FieldID, filter.ID)).Build()
 
 	row := ctx.SQL.QueryRowContext(ctx, query, args...)
 	if err := row.Err(); err != nil {
@@ -82,10 +47,7 @@ func (r *repo) Get(ctx *gofr.Context, filter *entities.Message) (*entities.Messa
 
 	msg := &entities.Message{}
 
-	err := row.Scan(
-		&msg.ID, &msg.RoomID, &msg.SenderID, &msg.SentAt, &msg.Status,
-		&msg.Content, &msg.CreatedAt, &msg.ModifiedAt, &msg.DeletedAt,
-	)
+	err := row.Scan(&msg.ID, &msg.RoomID, &msg.SenderID, &msg.Content, &msg.CreatedAt, &msg.ModifiedAt)
 	if err != nil {
 		return nil, repos.Error(err, message.Entity)
 	}
@@ -96,8 +58,8 @@ func (r *repo) Get(ctx *gofr.Context, filter *entities.Message) (*entities.Messa
 func (r *repo) List(ctx *gofr.Context, filter *repos.MessageFilter) ([]*entities.Message, error) {
 	sb := sqlbuilder.NewSelectBuilder().
 		Select(
-			message.FieldID, message.FieldRoomID, message.FieldSenderID, message.FieldSentAt, message.FieldStatus,
-			message.FieldContent, message.FieldCreatedAt, message.FieldModifiedAt, message.FieldDeletedAt,
+			message.FieldID, message.FieldRoomID, message.FieldSenderID,
+			message.FieldContent, message.FieldCreatedAt, message.FieldModifiedAt,
 		).
 		From(message.Table)
 
@@ -105,8 +67,8 @@ func (r *repo) List(ctx *gofr.Context, filter *repos.MessageFilter) ([]*entities
 		sb = sb.Where(sb.EQ(message.FieldRoomID, filter.RoomID))
 	}
 
-	if !filter.ModifiedBefore.IsZero() {
-		sb = sb.Where(sb.LessThan(message.FieldModifiedAt, filter.ModifiedBefore))
+	if !filter.CreatedBefore.IsZero() {
+		sb = sb.Where(sb.LessThan(message.FieldCreatedAt, filter.CreatedBefore))
 	}
 
 	query, args := sb.OrderBy(message.FieldModifiedAt).Desc().Limit(20).Build()
@@ -122,10 +84,7 @@ func (r *repo) List(ctx *gofr.Context, filter *repos.MessageFilter) ([]*entities
 	for rows.Next() {
 		msg := &entities.Message{}
 
-		err = rows.Scan(
-			&msg.ID, &msg.RoomID, &msg.SenderID, &msg.SentAt, &msg.Status,
-			&msg.Content, &msg.CreatedAt, &msg.ModifiedAt, &msg.DeletedAt,
-		)
+		err = rows.Scan(&msg.ID, &msg.RoomID, &msg.SenderID, &msg.Content, &msg.CreatedAt, &msg.ModifiedAt)
 		if err != nil {
 			return nil, repos.Error(err, message.Entity)
 		}
@@ -134,25 +93,4 @@ func (r *repo) List(ctx *gofr.Context, filter *repos.MessageFilter) ([]*entities
 	}
 
 	return msgs, repos.Error(err, message.Entity)
-}
-
-func (r *repo) Delete(ctx *gofr.Context, filter *entities.Message) error {
-	sb := sqlbuilder.NewDeleteBuilder()
-	query, args := sb.DeleteFrom(message.Table).Where(sb.Equal(message.FieldID, filter.ID)).Build()
-
-	res, err := ctx.SQL.ExecContext(ctx, query, args...)
-	if err != nil {
-		return repos.Error(err, message.Entity)
-	}
-
-	n, err := res.RowsAffected()
-	if err != nil {
-		return repos.Error(err, message.Entity)
-	}
-
-	if n == 0 {
-		return repos.Error(sql.ErrNoRows, message.Entity)
-	}
-
-	return nil
 }
