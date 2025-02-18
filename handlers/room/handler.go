@@ -51,7 +51,6 @@ func (h *handler) Update(ctx *gofr.Context, req *handlers.UpdateRoom) (*entities
 // @Produce json
 // @Security ApiKey
 // @Param X-User-ID header string true "External identifier of the user"
-// @Param id path string true "Room ID"
 // @Param page query string false "Page number" example(1)
 // @Param size query string false "Rooms per page" example(20)
 // @Param include query string false "Additional objects to be included in the response" example(members)

@@ -201,11 +201,6 @@ paths:
         name: X-User-ID
         required: true
         type: string
-      - description: Room ID
-        in: path
-        name: id
-        required: true
-        type: string
       - description: Page number
         example: "1"
         in: query

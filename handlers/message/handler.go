@@ -47,9 +47,16 @@ func (h *handler) Create(ctx *gofr.Context, req *handlers.CreateMessage) (*entit
 // @Success 200 {object} handlers.MessagesResponse
 // @Router /v1/rooms/{roomID}/messages [get]
 func (h *handler) List(ctx *gofr.Context, req *handlers.ListMessages) ([]*entities.Message, error) {
-	createdBefore, err := time.Parse(time.RFC3339, req.CreatedBefore)
-	if err != nil {
-		return nil, err
+	var (
+		err           error
+		createdBefore time.Time
+	)
+
+	if req.CreatedBefore != "" {
+		createdBefore, err = time.Parse(time.RFC3339, req.CreatedBefore)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return h.svc.List(ctx, &services.ListMessage{UserID: req.UserID, RoomID: req.RoomID, CreatedBefore: createdBefore})

@@ -20,10 +20,10 @@ type User struct {
 
 type Message struct {
 	Entity
-	ID       id.ID  `json:"id,omitempty" example:"89e48f30"`       //Unique identifier of the message
-	RoomID   string `json:"roomID,omitempty" example:"89e47f30"`   //Unique identifier of the room that message is added to
-	SenderID string `json:"senderID,omitempty" example:"89e46f30"` //Unique identifier of the user that created the message
-	Content  string `json:"content,omitempty" example:"Hello"`     //Message content
+	ID       id.ID   `json:"id,omitempty" example:"89e48f30"`       //Unique identifier of the message
+	RoomID   string  `json:"roomID,omitempty" example:"89e47f30"`   //Unique identifier of the room that message is added to
+	SenderID *string `json:"senderID,omitempty" example:"89e46f30"` //Unique identifier of the user that created the message
+	Content  string  `json:"content,omitempty" example:"Hello"`     //Message content
 }
 
 type Room struct {

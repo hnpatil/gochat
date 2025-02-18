@@ -43,13 +43,6 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Room ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
                         "example": "1",
                         "description": "Page number",
                         "name": "page",

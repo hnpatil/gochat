@@ -6,3 +6,6 @@ start-db:
 
 swagger-init:
 	swag init --output ./static && cp ./static/swagger.json ./static/openapi.json
+
+build-app:
+	docker build --tag gochat .

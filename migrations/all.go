@@ -33,7 +33,7 @@ const (
 		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		modified_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		room_id VARCHAR(36) NOT NULL,
-		sender_id VARCHAR(36) NOT NULL,
+		sender_id VARCHAR(36),
 		sent_at TIMESTAMP,
 		content TEXT NOT NULL,
 		PRIMARY KEY (room_id, id),

@@ -26,7 +26,7 @@ func (s *svc) Create(ctx *gofr.Context, req *services.CreateMessage) (*entities.
 
 	msg := &entities.Message{
 		ID:       id.New(),
-		SenderID: req.UserID,
+		SenderID: &req.UserID,
 		RoomID:   req.RoomID,
 		Content:  req.Content,
 	}
