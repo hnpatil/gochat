@@ -1,22 +1,11 @@
 package handlers
 
-import (
-	"gofr.dev/pkg/gofr/logging"
-	"net/http"
-)
-
-type NotImplemented struct {
-	error string
+// ErrorResponse represents the standard error response format
+type ErrorResponse struct {
+	Error ErrorDetail `json:"error"` // Error details
 }
 
-func (n NotImplemented) Error() string {
-	return "Not Implemented"
-}
-
-func (n NotImplemented) StatusCode() int {
-	return http.StatusNotImplemented
-}
-
-func (n NotImplemented) LogLevel() logging.Level {
-	return logging.WARN
+// ErrorDetail contains the error message
+type ErrorDetail struct {
+	Message string `json:"message" example:"Invalid request"` // Error message description
 }

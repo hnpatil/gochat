@@ -19,10 +19,10 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "ApiKeyAuth": []
                     }
                 ],
-                "description": "Retreive list of all rooms that calling user is a member of.",
+                "description": "Retrieves a paginated list of rooms that the requesting user is a member of.",
                 "consumes": [
                     "application/json"
                 ],
@@ -42,32 +42,50 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "example": "1",
-                        "description": "Page number",
+                        "type": "integer",
+                        "example": 1,
+                        "description": "Page number (default: 1)",
                         "name": "page",
                         "in": "query"
                     },
                     {
-                        "type": "string",
-                        "example": "20",
-                        "description": "Rooms per page",
+                        "type": "integer",
+                        "example": 20,
+                        "description": "Number of rooms per page (default: 20)",
                         "name": "size",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "example": "members",
-                        "description": "Additional objects to be included in the response",
+                        "example": "\"members\"",
+                        "description": "Additional objects to include in the response (e.g., members)",
                         "name": "include",
                         "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Successful response with room list",
                         "schema": {
                             "$ref": "#/definitions/handlers.RoomsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request parameters",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     }
                 }
@@ -75,10 +93,10 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "ApiKeyAuth": []
                     }
                 ],
-                "description": "Create a room and return the created room. Calling user is added as an ADMIN in the room.",
+                "description": "Creates a new room and returns the room details. The requesting user is assigned as an ADMIN in the room.",
                 "consumes": [
                     "application/json"
                 ],
@@ -91,27 +109,45 @@ const docTemplate = `{
                 "summary": "Create a room",
                 "parameters": [
                     {
-                        "description": "Room Request",
+                        "type": "string",
+                        "description": "External identifier of the user",
+                        "name": "X-User-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Room creation request payload",
                         "name": "user",
                         "in": "body",
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/handlers.CreateRoomBody"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "External identifier of the user",
-                        "name": "X-User-ID",
-                        "in": "header",
-                        "required": true
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created",
+                        "description": "Room successfully created",
                         "schema": {
                             "$ref": "#/definitions/handlers.RoomResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request payload",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     }
                 }
@@ -121,10 +157,10 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "ApiKeyAuth": []
                     }
                 ],
-                "description": "Get a single room by its id.",
+                "description": "Retrieves details of a single room by its ID.",
                 "consumes": [
                     "application/json"
                 ],
@@ -145,7 +181,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Room ID",
+                        "description": "Unique identifier of the room",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -153,9 +189,39 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Room details retrieved successfully",
                         "schema": {
                             "$ref": "#/definitions/handlers.RoomResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request parameters",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden – User is not a member of the room",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Room not found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     }
                 }
@@ -163,10 +229,10 @@ const docTemplate = `{
             "patch": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "ApiKeyAuth": []
                     }
                 ],
-                "description": "Update a room and return the updated room. Calling user should be an ADMIN in the room.",
+                "description": "Updates an existing room and returns the updated room details. The requesting user must be an ADMIN in the room.",
                 "consumes": [
                     "application/json"
                 ],
@@ -178,15 +244,6 @@ const docTemplate = `{
                 ],
                 "summary": "Update a room",
                 "parameters": [
-                    {
-                        "description": "Room Request",
-                        "name": "user",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.UpdateRoomBody"
-                        }
-                    },
                     {
                         "type": "string",
                         "description": "External identifier of the user",
@@ -200,13 +257,52 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Room update request payload",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateRoomBody"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Room successfully updated",
                         "schema": {
                             "$ref": "#/definitions/handlers.RoomResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request payload",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden – User is not an ADMIN",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Room not found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     }
                 }
@@ -216,10 +312,10 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "ApiKeyAuth": []
                     }
                 ],
-                "description": "List messages in a room. Returns all SENT messages in the room along with drafts created by the calling user in descending order of modified time. Calling user should be a member in the room.",
+                "description": "Retrieves all SENT messages from a specified room, ordered by creation time in descending order.",
                 "consumes": [
                     "application/json"
                 ],
@@ -233,30 +329,60 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "External identifier of the user",
+                        "description": "External identifier of the requesting user",
                         "name": "X-User-ID",
                         "in": "header",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "Room id of the room in which message is added",
+                        "description": "Unique identifier of the room from which messages are retrieved",
                         "name": "roomID",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "Modified date time upto which messages should be returned",
+                        "description": "Retrieve messages created before this timestamp (RFC 3339 format)",
                         "name": "createdBefore",
                         "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Messages retrieved successfully",
                         "schema": {
                             "$ref": "#/definitions/handlers.MessagesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request parameters",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden – User is not a member of the room",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Room not found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     }
                 }
@@ -264,10 +390,10 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "ApiKeyAuth": []
                     }
                 ],
-                "description": "Create a message in the specified room and return the created message. Calling user should be a member in the room. Calling user is added as message sender.",
+                "description": "Creates a message in the specified room and returns the created message.",
                 "consumes": [
                     "application/json"
                 ],
@@ -280,15 +406,6 @@ const docTemplate = `{
                 "summary": "Create a message",
                 "parameters": [
                     {
-                        "description": "Message Request",
-                        "name": "message",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.MessageBody"
-                        }
-                    },
-                    {
                         "type": "string",
                         "description": "External identifier of the user",
                         "name": "X-User-ID",
@@ -297,17 +414,56 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Room id of the room in which message is added",
+                        "description": "Unique identifier of the room where the message is created",
                         "name": "roomID",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Message creation request payload",
+                        "name": "message",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.MessageBody"
+                        }
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created",
+                        "description": "Message successfully created",
                         "schema": {
                             "$ref": "#/definitions/handlers.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request payload",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden – User is not a member of the room",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Room not found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     }
                 }
@@ -317,10 +473,10 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "ApiKeyAuth": []
                     }
                 ],
-                "description": "Retreive list of all users",
+                "description": "Retrieves a paginated list of users.",
                 "consumes": [
                     "application/json"
                 ],
@@ -341,23 +497,41 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "example": 1,
-                        "description": "Page number",
+                        "description": "Page number (default: 1)",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
                         "example": 20,
-                        "description": "Users per page",
+                        "description": "Number of users per page (default: 20)",
                         "name": "size",
                         "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Successful response with user list",
                         "schema": {
                             "$ref": "#/definitions/handlers.UsersResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request parameters",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     }
                 }
@@ -365,10 +539,10 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "ApiKeyAuth": []
                     }
                 ],
-                "description": "Create a new user and return the created user.",
+                "description": "Creates a new user and returns the created user details.",
                 "consumes": [
                     "application/json"
                 ],
@@ -378,30 +552,48 @@ const docTemplate = `{
                 "tags": [
                     "Users"
                 ],
-                "summary": "Create a user",
+                "summary": "Create a new user",
                 "parameters": [
-                    {
-                        "description": "User Request",
-                        "name": "user",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.UserBody"
-                        }
-                    },
                     {
                         "type": "string",
                         "description": "External identifier of the user",
                         "name": "X-User-ID",
                         "in": "header",
                         "required": true
+                    },
+                    {
+                        "description": "User request payload",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UserBody"
+                        }
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created",
+                        "description": "User successfully created",
                         "schema": {
                             "$ref": "#/definitions/handlers.UserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request payload",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     }
                 }
@@ -409,10 +601,10 @@ const docTemplate = `{
             "delete": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "ApiKeyAuth": []
                     }
                 ],
-                "description": "Delete a user.",
+                "description": "Deletes a user by their external identifier.",
                 "consumes": [
                     "application/json"
                 ],
@@ -434,17 +626,41 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "204": {
-                        "description": "No Content"
+                        "description": "User successfully deleted"
+                    },
+                    "400": {
+                        "description": "Invalid request parameters",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
                     }
                 }
             },
             "patch": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "ApiKeyAuth": []
                     }
                 ],
-                "description": "Update a user and return the updated user.",
+                "description": "Updates an existing user and returns the updated user details.",
                 "consumes": [
                     "application/json"
                 ],
@@ -457,27 +673,51 @@ const docTemplate = `{
                 "summary": "Update a user",
                 "parameters": [
                     {
-                        "description": "User Request",
+                        "type": "string",
+                        "description": "External identifier of the user",
+                        "name": "X-User-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "User request payload",
                         "name": "user",
                         "in": "body",
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/handlers.UserBody"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "External identifier of the user",
-                        "name": "X-User-ID",
-                        "in": "header",
-                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "User successfully updated",
                         "schema": {
                             "$ref": "#/definitions/handlers.UserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request payload",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     }
                 }
@@ -494,7 +734,7 @@ const docTemplate = `{
                     "example": "Hello"
                 },
                 "createdAt": {
-                    "description": "Time when entity was created",
+                    "description": "Timestamp when the entity was created",
                     "type": "string",
                     "example": "2025-02-08T14:13:39.080551Z"
                 },
@@ -504,17 +744,17 @@ const docTemplate = `{
                     "example": "89e48f30"
                 },
                 "modifiedAt": {
-                    "description": "Time when entity was modified",
+                    "description": "Timestamp when the entity was last modified",
                     "type": "string",
                     "example": "2025-02-08T14:13:39.080551Z"
                 },
                 "roomID": {
-                    "description": "Unique identifier of the room that message is added to",
+                    "description": "Unique identifier of the room the message belongs to",
                     "type": "string",
                     "example": "89e47f30"
                 },
                 "senderID": {
-                    "description": "Unique identifier of the user that created the message",
+                    "description": "Unique identifier of the user who created the message",
                     "type": "string",
                     "example": "89e46f30"
                 }
@@ -524,7 +764,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "createdAt": {
-                    "description": "Time when entity was created",
+                    "description": "Timestamp when the entity was created",
                     "type": "string",
                     "example": "2025-02-08T14:13:39.080551Z"
                 },
@@ -541,7 +781,7 @@ const docTemplate = `{
                     }
                 },
                 "metadata": {
-                    "description": "Room meta data",
+                    "description": "Metadata associated with the room",
                     "allOf": [
                         {
                             "$ref": "#/definitions/metadata.Metadata"
@@ -549,7 +789,7 @@ const docTemplate = `{
                     ]
                 },
                 "modifiedAt": {
-                    "description": "Time when entity was modified",
+                    "description": "Timestamp when the entity was last modified",
                     "type": "string",
                     "example": "2025-02-08T14:13:39.080551Z"
                 }
@@ -559,17 +799,17 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "createdAt": {
-                    "description": "Time when entity was created",
+                    "description": "Timestamp when the entity was created",
                     "type": "string",
                     "example": "2025-02-08T14:13:39.080551Z"
                 },
                 "modifiedAt": {
-                    "description": "Time when entity was modified",
+                    "description": "Timestamp when the entity was last modified",
                     "type": "string",
                     "example": "2025-02-08T14:13:39.080551Z"
                 },
                 "role": {
-                    "description": "Role defines permissions of user on the room.",
+                    "description": "Role defining user permissions in the room",
                     "allOf": [
                         {
                             "$ref": "#/definitions/roommember.Role"
@@ -583,7 +823,7 @@ const docTemplate = `{
                     "example": "89e47f30"
                 },
                 "user": {
-                    "description": "User object associated with member",
+                    "description": "User object associated with the room member",
                     "allOf": [
                         {
                             "$ref": "#/definitions/entities.User"
@@ -591,7 +831,7 @@ const docTemplate = `{
                     ]
                 },
                 "userID": {
-                    "description": "External identifier of the user",
+                    "description": "Unique identifier of the user",
                     "type": "string",
                     "example": "89e46f30"
                 }
@@ -601,12 +841,12 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "createdAt": {
-                    "description": "Time when entity was created",
+                    "description": "Timestamp when the entity was created",
                     "type": "string",
                     "example": "2025-02-08T14:13:39.080551Z"
                 },
                 "id": {
-                    "description": "External identifier of the user",
+                    "description": "Unique identifier of the user",
                     "type": "string",
                     "example": "89e46f30"
                 },
@@ -619,7 +859,7 @@ const docTemplate = `{
                     ]
                 },
                 "modifiedAt": {
-                    "description": "Time when entity was modified",
+                    "description": "Timestamp when the entity was last modified",
                     "type": "string",
                     "example": "2025-02-08T14:13:39.080551Z"
                 }
@@ -632,12 +872,12 @@ const docTemplate = `{
             ],
             "properties": {
                 "id": {
-                    "description": "Optional unique identifier of the room. A default UID is created if not present",
+                    "description": "Optional unique identifier of the room. A default UID is created if not provided.",
                     "type": "string",
                     "example": "89e47f30"
                 },
                 "members": {
-                    "description": "List of user ids of room members.",
+                    "description": "List of user IDs to be added as room members.",
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -657,6 +897,29 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.ErrorDetail": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "description": "Error message description",
+                    "type": "string",
+                    "example": "Invalid request"
+                }
+            }
+        },
+        "handlers.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "description": "Error details",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/handlers.ErrorDetail"
+                        }
+                    ]
+                }
+            }
+        },
         "handlers.MessageBody": {
             "type": "object",
             "properties": {
@@ -671,7 +934,12 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/entities.Message"
+                    "description": "Message data",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entities.Message"
+                        }
+                    ]
                 }
             }
         },
@@ -679,6 +947,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "data": {
+                    "description": "List of messages",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/entities.Message"
@@ -690,7 +959,12 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/entities.Room"
+                    "description": "Room data",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entities.Room"
+                        }
+                    ]
                 }
             }
         },
@@ -698,6 +972,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "data": {
+                    "description": "List of rooms",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/entities.Room"
@@ -722,7 +997,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "metadata": {
-                    "description": "User Metadata",
+                    "description": "Metadata associated with the user",
                     "allOf": [
                         {
                             "$ref": "#/definitions/metadata.Metadata"
@@ -735,7 +1010,12 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/entities.User"
+                    "description": "User data",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entities.User"
+                        }
+                    ]
                 }
             }
         },
@@ -743,6 +1023,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "data": {
+                    "description": "List of users",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/entities.User"
@@ -767,7 +1048,7 @@ const docTemplate = `{
         }
     },
     "securityDefinitions": {
-        "ApiKey": {
+        "ApiKeyAuth": {
             "type": "apiKey",
             "name": "X-API-KEY",
             "in": "header"

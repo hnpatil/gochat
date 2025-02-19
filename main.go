@@ -19,9 +19,9 @@ import (
 	"strings"
 )
 
-// @securityDefinitions.apikey ApiKey
-// @in header
-// @name X-API-KEY
+// @SecurityDefinitions.apikey ApiKeyAuth
+// @In header
+// @Name X-API-KEY
 
 func main() {
 	app := gofr.New()

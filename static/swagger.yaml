@@ -6,7 +6,7 @@ definitions:
         example: Hello
         type: string
       createdAt:
-        description: Time when entity was created
+        description: Timestamp when the entity was created
         example: "2025-02-08T14:13:39.080551Z"
         type: string
       id:
@@ -14,22 +14,22 @@ definitions:
         example: 89e48f30
         type: string
       modifiedAt:
-        description: Time when entity was modified
+        description: Timestamp when the entity was last modified
         example: "2025-02-08T14:13:39.080551Z"
         type: string
       roomID:
-        description: Unique identifier of the room that message is added to
+        description: Unique identifier of the room the message belongs to
         example: 89e47f30
         type: string
       senderID:
-        description: Unique identifier of the user that created the message
+        description: Unique identifier of the user who created the message
         example: 89e46f30
         type: string
     type: object
   entities.Room:
     properties:
       createdAt:
-        description: Time when entity was created
+        description: Timestamp when the entity was created
         example: "2025-02-08T14:13:39.080551Z"
         type: string
       id:
@@ -44,26 +44,26 @@ definitions:
       metadata:
         allOf:
         - $ref: '#/definitions/metadata.Metadata'
-        description: Room meta data
+        description: Metadata associated with the room
       modifiedAt:
-        description: Time when entity was modified
+        description: Timestamp when the entity was last modified
         example: "2025-02-08T14:13:39.080551Z"
         type: string
     type: object
   entities.RoomMember:
     properties:
       createdAt:
-        description: Time when entity was created
+        description: Timestamp when the entity was created
         example: "2025-02-08T14:13:39.080551Z"
         type: string
       modifiedAt:
-        description: Time when entity was modified
+        description: Timestamp when the entity was last modified
         example: "2025-02-08T14:13:39.080551Z"
         type: string
       role:
         allOf:
         - $ref: '#/definitions/roommember.Role'
-        description: Role defines permissions of user on the room.
+        description: Role defining user permissions in the room
         example: ADMIN
       roomID:
         description: Unique identifier of the room
@@ -72,20 +72,20 @@ definitions:
       user:
         allOf:
         - $ref: '#/definitions/entities.User'
-        description: User object associated with member
+        description: User object associated with the room member
       userID:
-        description: External identifier of the user
+        description: Unique identifier of the user
         example: 89e46f30
         type: string
     type: object
   entities.User:
     properties:
       createdAt:
-        description: Time when entity was created
+        description: Timestamp when the entity was created
         example: "2025-02-08T14:13:39.080551Z"
         type: string
       id:
-        description: External identifier of the user
+        description: Unique identifier of the user
         example: 89e46f30
         type: string
       metadata:
@@ -93,7 +93,7 @@ definitions:
         - $ref: '#/definitions/metadata.Metadata'
         description: Metadata associated with the user
       modifiedAt:
-        description: Time when entity was modified
+        description: Timestamp when the entity was last modified
         example: "2025-02-08T14:13:39.080551Z"
         type: string
     type: object
@@ -101,11 +101,11 @@ definitions:
     properties:
       id:
         description: Optional unique identifier of the room. A default UID is created
-          if not present
+          if not provided.
         example: 89e47f30
         type: string
       members:
-        description: List of user ids of room members.
+        description: List of user IDs to be added as room members.
         example:
         - 89e46f31
         - 89e46f32
@@ -119,6 +119,20 @@ definitions:
     required:
     - members
     type: object
+  handlers.ErrorDetail:
+    properties:
+      message:
+        description: Error message description
+        example: Invalid request
+        type: string
+    type: object
+  handlers.ErrorResponse:
+    properties:
+      error:
+        allOf:
+        - $ref: '#/definitions/handlers.ErrorDetail'
+        description: Error details
+    type: object
   handlers.MessageBody:
     properties:
       content:
@@ -129,11 +143,14 @@ definitions:
   handlers.MessageResponse:
     properties:
       data:
-        $ref: '#/definitions/entities.Message'
+        allOf:
+        - $ref: '#/definitions/entities.Message'
+        description: Message data
     type: object
   handlers.MessagesResponse:
     properties:
       data:
+        description: List of messages
         items:
           $ref: '#/definitions/entities.Message'
         type: array
@@ -141,11 +158,14 @@ definitions:
   handlers.RoomResponse:
     properties:
       data:
-        $ref: '#/definitions/entities.Room'
+        allOf:
+        - $ref: '#/definitions/entities.Room'
+        description: Room data
     type: object
   handlers.RoomsResponse:
     properties:
       data:
+        description: List of rooms
         items:
           $ref: '#/definitions/entities.Room'
         type: array
@@ -162,16 +182,19 @@ definitions:
       metadata:
         allOf:
         - $ref: '#/definitions/metadata.Metadata'
-        description: User Metadata
+        description: Metadata associated with the user
     type: object
   handlers.UserResponse:
     properties:
       data:
-        $ref: '#/definitions/entities.User'
+        allOf:
+        - $ref: '#/definitions/entities.User'
+        description: User data
     type: object
   handlers.UsersResponse:
     properties:
       data:
+        description: List of users
         items:
           $ref: '#/definitions/entities.User'
         type: array
@@ -194,25 +217,26 @@ paths:
     get:
       consumes:
       - application/json
-      description: Retreive list of all rooms that calling user is a member of.
+      description: Retrieves a paginated list of rooms that the requesting user is
+        a member of.
       parameters:
       - description: External identifier of the user
         in: header
         name: X-User-ID
         required: true
         type: string
-      - description: Page number
-        example: "1"
+      - description: 'Page number (default: 1)'
+        example: 1
         in: query
         name: page
-        type: string
-      - description: Rooms per page
-        example: "20"
+        type: integer
+      - description: 'Number of rooms per page (default: 20)'
+        example: 20
         in: query
         name: size
-        type: string
-      - description: Additional objects to be included in the response
-        example: members
+        type: integer
+      - description: Additional objects to include in the response (e.g., members)
+        example: '"members"'
         in: query
         name: include
         type: string
@@ -220,40 +244,64 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Successful response with room list
           schema:
             $ref: '#/definitions/handlers.RoomsResponse'
+        "400":
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
       security:
-      - ApiKey: []
+      - ApiKeyAuth: []
       summary: List rooms
       tags:
       - Rooms
     post:
       consumes:
       - application/json
-      description: Create a room and return the created room. Calling user is added
-        as an ADMIN in the room.
+      description: Creates a new room and returns the room details. The requesting
+        user is assigned as an ADMIN in the room.
       parameters:
-      - description: Room Request
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.CreateRoomBody'
       - description: External identifier of the user
         in: header
         name: X-User-ID
         required: true
         type: string
+      - description: Room creation request payload
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateRoomBody'
       produces:
       - application/json
       responses:
         "201":
-          description: Created
+          description: Room successfully created
           schema:
             $ref: '#/definitions/handlers.RoomResponse'
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
       security:
-      - ApiKey: []
+      - ApiKeyAuth: []
       summary: Create a room
       tags:
       - Rooms
@@ -261,14 +309,14 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get a single room by its id.
+      description: Retrieves details of a single room by its ID.
       parameters:
       - description: External identifier of the user
         in: header
         name: X-User-ID
         required: true
         type: string
-      - description: Room ID
+      - description: Unique identifier of the room
         in: path
         name: id
         required: true
@@ -277,26 +325,40 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Room details retrieved successfully
           schema:
             $ref: '#/definitions/handlers.RoomResponse'
+        "400":
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden – User is not a member of the room
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Room not found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
       security:
-      - ApiKey: []
+      - ApiKeyAuth: []
       summary: Get room
       tags:
       - Rooms
     patch:
       consumes:
       - application/json
-      description: Update a room and return the updated room. Calling user should
-        be an ADMIN in the room.
+      description: Updates an existing room and returns the updated room details.
+        The requesting user must be an ADMIN in the room.
       parameters:
-      - description: Room Request
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.UpdateRoomBody'
       - description: External identifier of the user
         in: header
         name: X-User-ID
@@ -307,15 +369,41 @@ paths:
         name: id
         required: true
         type: string
+      - description: Room update request payload
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateRoomBody'
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Room successfully updated
           schema:
             $ref: '#/definitions/handlers.RoomResponse'
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden – User is not an ADMIN
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Room not found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
       security:
-      - ApiKey: []
+      - ApiKeyAuth: []
       summary: Update a room
       tags:
       - Rooms
@@ -323,21 +411,20 @@ paths:
     get:
       consumes:
       - application/json
-      description: List messages in a room. Returns all SENT messages in the room
-        along with drafts created by the calling user in descending order of modified
-        time. Calling user should be a member in the room.
+      description: Retrieves all SENT messages from a specified room, ordered by creation
+        time in descending order.
       parameters:
-      - description: External identifier of the user
+      - description: External identifier of the requesting user
         in: header
         name: X-User-ID
         required: true
         type: string
-      - description: Room id of the room in which message is added
+      - description: Unique identifier of the room from which messages are retrieved
         in: path
         name: roomID
         required: true
         type: string
-      - description: Modified date time upto which messages should be returned
+      - description: Retrieve messages created before this timestamp (RFC 3339 format)
         in: query
         name: createdBefore
         type: string
@@ -345,46 +432,85 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Messages retrieved successfully
           schema:
             $ref: '#/definitions/handlers.MessagesResponse'
+        "400":
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden – User is not a member of the room
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Room not found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
       security:
-      - ApiKey: []
+      - ApiKeyAuth: []
       summary: List messages
       tags:
       - Messages
     post:
       consumes:
       - application/json
-      description: Create a message in the specified room and return the created message.
-        Calling user should be a member in the room. Calling user is added as message
-        sender.
+      description: Creates a message in the specified room and returns the created
+        message.
       parameters:
-      - description: Message Request
-        in: body
-        name: message
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.MessageBody'
       - description: External identifier of the user
         in: header
         name: X-User-ID
         required: true
         type: string
-      - description: Room id of the room in which message is added
+      - description: Unique identifier of the room where the message is created
         in: path
         name: roomID
         required: true
         type: string
+      - description: Message creation request payload
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.MessageBody'
       produces:
       - application/json
       responses:
         "201":
-          description: Created
+          description: Message successfully created
           schema:
             $ref: '#/definitions/handlers.MessageResponse'
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden – User is not a member of the room
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Room not found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
       security:
-      - ApiKey: []
+      - ApiKeyAuth: []
       summary: Create a message
       tags:
       - Messages
@@ -392,7 +518,7 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Delete a user.
+      description: Deletes a user by their external identifier.
       parameters:
       - description: External identifier of the user
         in: header
@@ -403,27 +529,43 @@ paths:
       - application/json
       responses:
         "204":
-          description: No Content
+          description: User successfully deleted
+        "400":
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
       security:
-      - ApiKey: []
+      - ApiKeyAuth: []
       summary: Delete a user
       tags:
       - Users
     get:
       consumes:
       - application/json
-      description: Retreive list of all users
+      description: Retrieves a paginated list of users.
       parameters:
       - description: External identifier of the user
         in: header
         name: X-User-ID
         type: string
-      - description: Page number
+      - description: 'Page number (default: 1)'
         example: 1
         in: query
         name: page
         type: integer
-      - description: Users per page
+      - description: 'Number of users per page (default: 20)'
         example: 20
         in: query
         name: size
@@ -432,72 +574,112 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Successful response with user list
           schema:
             $ref: '#/definitions/handlers.UsersResponse'
+        "400":
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
       security:
-      - ApiKey: []
+      - ApiKeyAuth: []
       summary: List users
       tags:
       - Users
     patch:
       consumes:
       - application/json
-      description: Update a user and return the updated user.
+      description: Updates an existing user and returns the updated user details.
       parameters:
-      - description: User Request
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.UserBody'
       - description: External identifier of the user
         in: header
         name: X-User-ID
         required: true
         type: string
+      - description: User request payload
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UserBody'
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: User successfully updated
           schema:
             $ref: '#/definitions/handlers.UserResponse'
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
       security:
-      - ApiKey: []
+      - ApiKeyAuth: []
       summary: Update a user
       tags:
       - Users
     post:
       consumes:
       - application/json
-      description: Create a new user and return the created user.
+      description: Creates a new user and returns the created user details.
       parameters:
-      - description: User Request
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.UserBody'
       - description: External identifier of the user
         in: header
         name: X-User-ID
         required: true
         type: string
+      - description: User request payload
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UserBody'
       produces:
       - application/json
       responses:
         "201":
-          description: Created
+          description: User successfully created
           schema:
             $ref: '#/definitions/handlers.UserResponse'
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
       security:
-      - ApiKey: []
-      summary: Create a user
+      - ApiKeyAuth: []
+      summary: Create a new user
       tags:
       - Users
 securityDefinitions:
-  ApiKey:
+  ApiKeyAuth:
     in: header
     name: X-API-KEY
     type: apiKey

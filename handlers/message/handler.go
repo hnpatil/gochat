@@ -16,17 +16,25 @@ func New(svc services.Message) handlers.Message {
 	return &handler{svc: svc}
 }
 
-// @Summary Create a message
-// @Description Create a message in the specified room and return the created message. Calling user should be a member in the room. Calling user is added as message sender.
-// @Tags Messages
-// @Accept json
-// @Produce json
-// @Security ApiKey
-// @Param message body handlers.MessageBody true "Message Request"
-// @Param X-User-ID header string true "External identifier of the user"
-// @Param roomID path string true "Room id of the room in which message is added"
-// @Success 201 {object} handlers.MessageResponse
-// @Router /v1/rooms/{roomID}/messages [post]
+// @Summary      Create a message
+// @Description  Creates a message in the specified room and returns the created message.
+//
+//	The requesting user must be a member of the room and is assigned as the message sender.
+//
+// @Tags         Messages
+// @Accept       json
+// @Produce      json
+// @Security     ApiKeyAuth
+// @Param        X-User-ID header string true "External identifier of the user"
+// @Param        roomID path string true "Unique identifier of the room where the message is created"
+// @Param        message body handlers.MessageBody true "Message creation request payload"
+// @Success      201 {object} handlers.MessageResponse "Message successfully created"
+// @Failure      400 {object} handlers.ErrorResponse "Invalid request payload"
+// @Failure      401 {object} handlers.ErrorResponse "Unauthorized"
+// @Failure      403 {object} handlers.ErrorResponse "Forbidden – User is not a member of the room"
+// @Failure      404 {object} handlers.ErrorResponse "Room not found"
+// @Failure      500 {object} handlers.ErrorResponse "Internal server error"
+// @Router       /v1/rooms/{roomID}/messages [post]
 func (h *handler) Create(ctx *gofr.Context, req *handlers.CreateMessage) (*entities.Message, error) {
 	return h.svc.Create(ctx, &services.CreateMessage{
 		UserID:  req.UserID,
@@ -35,17 +43,25 @@ func (h *handler) Create(ctx *gofr.Context, req *handlers.CreateMessage) (*entit
 	})
 }
 
-// @Summary List messages
-// @Description List messages in a room. Returns all SENT messages in the room along with drafts created by the calling user in descending order of modified time. Calling user should be a member in the room.
-// @Tags Messages
-// @Accept json
-// @Produce json
-// @Security ApiKey
-// @Param X-User-ID header string true "External identifier of the user"
-// @Param roomID path string true "Room id of the room in which message is added"
-// @Param createdBefore query string false  "Modified date time upto which messages should be returned"
-// @Success 200 {object} handlers.MessagesResponse
-// @Router /v1/rooms/{roomID}/messages [get]
+// @Summary      List messages
+// @Description  Retrieves all SENT messages from a specified room, ordered by creation time in descending order.
+//
+//	The requesting user must be a member of the room.
+//
+// @Tags         Messages
+// @Accept       json
+// @Produce      json
+// @Security     ApiKeyAuth
+// @Param        X-User-ID header string true "External identifier of the requesting user"
+// @Param        roomID path string true "Unique identifier of the room from which messages are retrieved"
+// @Param        createdBefore query string false "Retrieve messages created before this timestamp (RFC 3339 format)"
+// @Success      200 {object} handlers.MessagesResponse "Messages retrieved successfully"
+// @Failure      400 {object} handlers.ErrorResponse "Invalid request parameters"
+// @Failure      401 {object} handlers.ErrorResponse "Unauthorized"
+// @Failure      403 {object} handlers.ErrorResponse "Forbidden – User is not a member of the room"
+// @Failure      404 {object} handlers.ErrorResponse "Room not found"
+// @Failure      500 {object} handlers.ErrorResponse "Internal server error"
+// @Router       /v1/rooms/{roomID}/messages [get]
 func (h *handler) List(ctx *gofr.Context, req *handlers.ListMessages) ([]*entities.Message, error) {
 	var (
 		err           error
