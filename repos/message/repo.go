@@ -1,96 +1,82 @@
 package message
 
 import (
+	"encoding/json"
+	"github.com/gocql/gocql"
 	"github.com/hnpatil/gochat/entities"
 	"github.com/hnpatil/gochat/entities/message"
+	"github.com/hnpatil/gochat/pkg/id"
 	"github.com/hnpatil/gochat/repos"
 	"github.com/huandu/go-sqlbuilder"
 	"gofr.dev/pkg/gofr"
+	"time"
 )
 
 type repo struct {
+	cass *gocql.Session
 }
 
-func New() repos.Message {
-	return &repo{}
+func New(cass *gocql.Session) repos.Message {
+	return &repo{cass: cass}
 }
 
-func (r *repo) Create(ctx *gofr.Context, request *entities.Message) (*entities.Message, error) {
-	query, args := sqlbuilder.NewInsertBuilder().
-		InsertInto(message.Table).
-		Cols(message.FieldID, message.FieldRoomID, message.FieldSenderID, message.FieldContent).
-		Values(request.ID, request.RoomID, request.SenderID, request.Content).
-		Build()
-
-	_, err := ctx.SQL.ExecContext(ctx, query, args...)
-	if err != nil {
-		return nil, repos.Error(err, message.Entity)
-	}
-
-	return r.Get(ctx, &entities.Message{RoomID: request.RoomID, ID: request.ID})
-}
-
-func (r *repo) Get(ctx *gofr.Context, filter *entities.Message) (*entities.Message, error) {
+func (r *repo) List(_ *gofr.Context, filter *repos.MessageFilter) ([]*entities.Message, error) {
 	sb := sqlbuilder.NewSelectBuilder()
-	query, args := sb.
-		Select(
-			message.FieldID, message.FieldRoomID, message.FieldSenderID,
-			message.FieldContent, message.FieldCreatedAt, message.FieldModifiedAt,
-		).
+	sb = sb.
+		Select(message.FieldSpaceID, message.FieldCreatedAt, message.FieldData).
 		From(message.Table).
-		Where(sb.Equal(message.FieldRoomID, filter.RoomID), sb.Equal(message.FieldID, filter.ID)).Build()
-
-	row := ctx.SQL.QueryRowContext(ctx, query, args...)
-	if err := row.Err(); err != nil {
-		return nil, repos.Error(err, message.Entity)
-	}
-
-	msg := &entities.Message{}
-
-	err := row.Scan(&msg.ID, &msg.RoomID, &msg.SenderID, &msg.Content, &msg.CreatedAt, &msg.ModifiedAt)
-	if err != nil {
-		return nil, repos.Error(err, message.Entity)
-	}
-
-	return msg, nil
-}
-
-func (r *repo) List(ctx *gofr.Context, filter *repos.MessageFilter) ([]*entities.Message, error) {
-	sb := sqlbuilder.NewSelectBuilder().
-		Select(
-			message.FieldID, message.FieldRoomID, message.FieldSenderID,
-			message.FieldContent, message.FieldCreatedAt, message.FieldModifiedAt,
-		).
-		From(message.Table)
-
-	if filter.RoomID != "" {
-		sb = sb.Where(sb.EQ(message.FieldRoomID, filter.RoomID))
-	}
+		Where(sb.Equal(message.FieldSpaceID, filter.SpaceID))
 
 	if !filter.CreatedBefore.IsZero() {
 		sb = sb.Where(sb.LessThan(message.FieldCreatedAt, filter.CreatedBefore))
 	}
 
-	query, args := sb.OrderBy(message.FieldModifiedAt).Desc().Limit(20).Build()
-	rows, err := ctx.SQL.QueryContext(ctx, query, args...)
-	if err != nil {
-		return nil, repos.Error(err, message.Entity)
-	}
+	query, args := sb.OrderBy(message.FieldCreatedAt).Desc().Limit(entities.DefaultSize).Build()
 
-	defer rows.Close()
+	iter := r.cass.Query(query, args...).Iter()
 
-	msgs := make([]*entities.Message, 0, 20)
+	defer iter.Close()
 
-	for rows.Next() {
-		msg := &entities.Message{}
+	var (
+		spaceID   string
+		data      string
+		createdAt time.Time
+		response  []*entities.Message
+	)
 
-		err = rows.Scan(&msg.ID, &msg.RoomID, &msg.SenderID, &msg.Content, &msg.CreatedAt, &msg.ModifiedAt)
+	for iter.Scan(&spaceID, &createdAt, &data) {
+		messageData := &entities.MessageData{}
+		err := json.Unmarshal([]byte(data), messageData)
 		if err != nil {
-			return nil, repos.Error(err, message.Entity)
+			return nil, err
 		}
 
-		msgs = append(msgs, msg)
+		response = append(response, &entities.Message{
+			SpaceID:   id.ID(spaceID),
+			CreatedAt: createdAt,
+			Data:      messageData,
+		})
 	}
 
-	return msgs, repos.Error(err, message.Entity)
+	return response, nil
+}
+
+func (r *repo) Create(_ *gofr.Context, request *entities.Message) (*entities.Message, error) {
+	data, err := json.Marshal(request.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	query, args := sqlbuilder.NewInsertBuilder().
+		InsertInto(message.Table).
+		Cols(message.FieldSpaceID, message.FieldCreatedAt, message.FieldData).
+		Values(request.SpaceID, request.CreatedAt, string(data)).
+		Build()
+
+	err = r.cass.Query(query, args...).Exec()
+	if err != nil {
+		return nil, err
+	}
+
+	return request, nil
 }

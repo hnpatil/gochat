@@ -2,7 +2,6 @@ package errors
 
 import (
 	"fmt"
-	"github.com/hnpatil/gochat/entities/roommember"
 	"gofr.dev/pkg/gofr/logging"
 	"net/http"
 )
@@ -33,33 +32,9 @@ func EntityNotFound(entity string) error {
 	}
 }
 
-func EntityExists(entity string) error {
-	return response{
-		message: fmt.Sprintf("%s already exists", entity),
-		status:  http.StatusConflict,
-		level:   logging.WARN,
-	}
-}
-
-func Forbidden(operation string) error {
-	return response{
-		message: fmt.Sprintf("Cannot %s", operation),
-		status:  http.StatusForbidden,
-		level:   logging.WARN,
-	}
-}
-
 func UnAuthorised(operation, resource string) error {
 	return response{
-		message: fmt.Sprintf("Cannot %s %s", operation, resource),
-		status:  http.StatusUnauthorized,
-		level:   logging.WARN,
-	}
-}
-
-func MissingRoles(roles []roommember.Role) error {
-	return response{
-		message: fmt.Sprintf("User lacks one of the required roles - %s", roles),
+		message: fmt.Sprintf("User cannot %s on %s", operation, resource),
 		status:  http.StatusUnauthorized,
 		level:   logging.WARN,
 	}

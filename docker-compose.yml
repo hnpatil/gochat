@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  go-chat-db:
+    image: scylladb/scylla
+    container_name: go-chat-db
+    ports:
+      - "9042:9042"
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+    command: "--cpus=1"
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "SHOW HOST"]
+      interval: 10s
+      retries: 5
+      start_period: 20s
+
+  go-chat-core:
+    image: gochat
+    container_name: go-chat-core
+    ports:
+      - "8000:8000"
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+    environment:
+      CASS_HOST: "go-chat-db"
+    depends_on:
+      go-chat-db:
+        condition: service_healthy

@@ -2,47 +2,79 @@ package message
 
 import (
 	"github.com/hnpatil/gochat/entities"
-	"github.com/hnpatil/gochat/entities/roommember"
+	"github.com/hnpatil/gochat/entities/space"
+	"github.com/hnpatil/gochat/errors"
 	"github.com/hnpatil/gochat/pkg/id"
+	"github.com/hnpatil/gochat/pkg/set"
 	"github.com/hnpatil/gochat/repos"
 	"github.com/hnpatil/gochat/services"
 	"gofr.dev/pkg/gofr"
+	"slices"
+	"time"
 )
 
 type svc struct {
-	repo repos.Message
-	room services.Room
+	messageRepo repos.Message
+	spaceRepo   repos.UserSpace
 }
 
-func New(repo repos.Message, room services.Room) services.Message {
-	return &svc{repo: repo, room: room}
+func New(messageRepo repos.Message, spaceRepo repos.UserSpace) services.Message {
+	return &svc{messageRepo: messageRepo, spaceRepo: spaceRepo}
 }
 
 func (s *svc) Create(ctx *gofr.Context, req *services.CreateMessage) (*entities.Message, error) {
-	_, err := s.room.ValidateRole(ctx, req.RoomID, req.UserID, roommember.RoleAdmin, roommember.RoleMember)
+	recipientSet := set.New[string](req.Recipients...)
+	recipientSet.Add(req.UserID)
+
+	recipients := recipientSet.Values()
+
+	msg, err := s.messageRepo.Create(ctx, &entities.Message{
+		SpaceID:   id.New(recipients...),
+		CreatedAt: time.Now(),
+		Data: &entities.MessageData{
+			Content:    req.Content,
+			SenderID:   req.UserID,
+			Recipients: recipients,
+		},
+	})
+
 	if err != nil {
 		return nil, err
 	}
 
-	msg := &entities.Message{
-		ID:       id.New(),
-		SenderID: &req.UserID,
-		RoomID:   req.RoomID,
-		Content:  req.Content,
+	userSpaces := make([]*entities.UserSpace, len(recipients))
+	for i, userID := range recipients {
+		userSpaces[i] = &entities.UserSpace{
+			UserID:    userID,
+			SpaceID:   msg.SpaceID,
+			UpdatedAt: msg.CreatedAt,
+			Data: &entities.UserSpaceData{
+				Members: recipients,
+				Preview: msg.Data.Content,
+			},
+		}
 	}
 
-	return s.repo.Create(ctx, msg)
+	err = s.spaceRepo.UpsertMany(ctx, userSpaces)
+	if err != nil {
+		ctx.Logger.Errorf("failed to upsert space %s: %s", msg.SpaceID, err)
+	}
+
+	return msg, nil
 }
 
-func (s *svc) List(ctx *gofr.Context, req *services.ListMessage) ([]*entities.Message, error) {
-	_, err := s.room.ValidateRole(ctx, req.RoomID, req.UserID, roommember.RoleAdmin, roommember.RoleMember)
+func (s *svc) List(ctx *gofr.Context, req *services.ListMessages) ([]*entities.Message, error) {
+	messages, err := s.messageRepo.List(ctx, &repos.MessageFilter{
+		CreatedBefore: req.CreatedBefore,
+		SpaceID:       req.SpaceID,
+	})
+
 	if err != nil {
 		return nil, err
 	}
 
-	messages, err := s.repo.List(ctx, &repos.MessageFilter{RoomID: req.RoomID, CreatedBefore: req.CreatedBefore})
-	if err != nil {
-		return nil, err
+	if len(messages) > 0 && !slices.Contains(messages[0].Data.Recipients, req.UserID) {
+		return nil, errors.UnAuthorised("list messages", space.Entity)
 	}
 
 	return messages, nil

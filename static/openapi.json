@@ -4,307 +4,14 @@
         "contact": {}
     },
     "paths": {
-        "/v1/rooms": {
+        "/v1/messages": {
             "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Retrieves a paginated list of rooms that the requesting user is a member of.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Rooms"
-                ],
-                "summary": "List rooms",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "External identifier of the user",
-                        "name": "X-User-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "example": 1,
-                        "description": "Page number (default: 1)",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "example": 20,
-                        "description": "Number of rooms per page (default: 20)",
-                        "name": "size",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "example": "\"members\"",
-                        "description": "Additional objects to include in the response (e.g., members)",
-                        "name": "include",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful response with room list",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.RoomsResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request parameters",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Creates a new room and returns the room details. The requesting user is assigned as an ADMIN in the room.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Rooms"
-                ],
-                "summary": "Create a room",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "External identifier of the user",
-                        "name": "X-User-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "Room creation request payload",
-                        "name": "user",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.CreateRoomBody"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Room successfully created",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.RoomResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request payload",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/rooms/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieves details of a single room by its ID.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Rooms"
-                ],
-                "summary": "Get room",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "External identifier of the user",
-                        "name": "X-User-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Unique identifier of the room",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Room details retrieved successfully",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.RoomResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request parameters",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden – User is not a member of the room",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Room not found",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "patch": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Updates an existing room and returns the updated room details. The requesting user must be an ADMIN in the room.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Rooms"
-                ],
-                "summary": "Update a room",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "External identifier of the user",
-                        "name": "X-User-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Room ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Room update request payload",
-                        "name": "user",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.UpdateRoomBody"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Room successfully updated",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.RoomResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request payload",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden – User is not an ADMIN",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Room not found",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/rooms/{roomID}/messages": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieves all SENT messages from a specified room, ordered by creation time in descending order.",
+                "description": "Retrieves all SENT messages from a specified space, ordered by creation time in descending order.",
                 "consumes": [
                     "application/json"
                 ],
@@ -325,9 +32,9 @@
                     },
                     {
                         "type": "string",
-                        "description": "Unique identifier of the room from which messages are retrieved",
-                        "name": "roomID",
-                        "in": "path",
+                        "description": "Unique identifier of the space from which messages are retrieved",
+                        "name": "X-Space-ID",
+                        "in": "header",
                         "required": true
                     },
                     {
@@ -357,13 +64,13 @@
                         }
                     },
                     "403": {
-                        "description": "Forbidden – User is not a member of the room",
+                        "description": "Forbidden – User cannot list messages on UserSpace",
                         "schema": {
                             "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     },
                     "404": {
-                        "description": "Room not found",
+                        "description": "UserSpace not found",
                         "schema": {
                             "$ref": "#/definitions/handlers.ErrorResponse"
                         }
@@ -382,7 +89,7 @@
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Creates a message in the specified room and returns the created message.",
+                "description": "Creates a message into space identified by recipients and returns the created message.",
                 "consumes": [
                     "application/json"
                 ],
@@ -399,13 +106,6 @@
                         "description": "External identifier of the user",
                         "name": "X-User-ID",
                         "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Unique identifier of the room where the message is created",
-                        "name": "roomID",
-                        "in": "path",
                         "required": true
                     },
                     {
@@ -437,18 +137,6 @@
                             "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     },
-                    "403": {
-                        "description": "Forbidden – User is not a member of the room",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Room not found",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
@@ -458,14 +146,14 @@
                 }
             }
         },
-        "/v1/users": {
+        "/v1/spaces": {
             "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Retrieves a paginated list of users.",
+                "description": "Retrieves a list of spaces that the requesting user is a member of.",
                 "consumes": [
                     "application/json"
                 ],
@@ -473,36 +161,29 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Users"
+                    "Spaces"
                 ],
-                "summary": "List users",
+                "summary": "List spaces",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "External identifier of the user",
                         "name": "X-User-ID",
-                        "in": "header"
+                        "in": "header",
+                        "required": true
                     },
                     {
-                        "type": "integer",
-                        "example": 1,
-                        "description": "Page number (default: 1)",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "example": 20,
-                        "description": "Number of users per page (default: 20)",
-                        "name": "size",
+                        "type": "string",
+                        "description": "Retrieve spaces updated before this timestamp (RFC 3339 format)",
+                        "name": "updatedBefore",
                         "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Successful response with user list",
+                        "description": "Successful response with space list",
                         "schema": {
-                            "$ref": "#/definitions/handlers.UsersResponse"
+                            "$ref": "#/definitions/handlers.SpacesResponse"
                         }
                     },
                     "400": {
@@ -513,192 +194,6 @@
                     },
                     "401": {
                         "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Creates a new user and returns the created user details.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Users"
-                ],
-                "summary": "Create a new user",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "External identifier of the user",
-                        "name": "X-User-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "User request payload",
-                        "name": "user",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.UserBody"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "User successfully created",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.UserResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request payload",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Deletes a user by their external identifier.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Users"
-                ],
-                "summary": "Delete a user",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "External identifier of the user",
-                        "name": "X-User-ID",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "User successfully deleted"
-                    },
-                    "400": {
-                        "description": "Invalid request parameters",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "User not found",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "patch": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Updates an existing user and returns the updated user details.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Users"
-                ],
-                "summary": "Update a user",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "External identifier of the user",
-                        "name": "X-User-ID",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "User request payload",
-                        "name": "user",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.UserBody"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "User successfully updated",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.UserResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request payload",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "User not found",
                         "schema": {
                             "$ref": "#/definitions/handlers.ErrorResponse"
                         }
@@ -717,172 +212,98 @@
         "entities.Message": {
             "type": "object",
             "properties": {
+                "createdAt": {
+                    "description": "Timestamp of when the message was created.",
+                    "type": "string",
+                    "example": "2025-02-22T14:00:00Z"
+                },
+                "data": {
+                    "description": "Message details including content and sender info.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entities.MessageData"
+                        }
+                    ]
+                },
+                "spaceID": {
+                    "description": "Unique identifier for the space where the message is sent.",
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                }
+            }
+        },
+        "entities.MessageData": {
+            "type": "object",
+            "properties": {
                 "content": {
-                    "description": "Message content",
+                    "description": "The actual content of the message.",
                     "type": "string",
-                    "example": "Hello"
+                    "example": "Hello, world!"
                 },
-                "createdAt": {
-                    "description": "Timestamp when the entity was created",
-                    "type": "string",
-                    "example": "2025-02-08T14:13:39.080551Z"
-                },
-                "id": {
-                    "description": "Unique identifier of the message",
-                    "type": "string",
-                    "example": "89e48f30"
-                },
-                "modifiedAt": {
-                    "description": "Timestamp when the entity was last modified",
-                    "type": "string",
-                    "example": "2025-02-08T14:13:39.080551Z"
-                },
-                "roomID": {
-                    "description": "Unique identifier of the room the message belongs to",
-                    "type": "string",
-                    "example": "89e47f30"
-                },
-                "senderID": {
-                    "description": "Unique identifier of the user who created the message",
-                    "type": "string",
-                    "example": "89e46f30"
-                }
-            }
-        },
-        "entities.Room": {
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "description": "Timestamp when the entity was created",
-                    "type": "string",
-                    "example": "2025-02-08T14:13:39.080551Z"
-                },
-                "id": {
-                    "description": "Unique identifier of the room",
-                    "type": "string",
-                    "example": "89e47f30"
-                },
-                "members": {
-                    "description": "List of room members",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entities.RoomMember"
-                    }
-                },
-                "metadata": {
-                    "description": "Metadata associated with the room",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/metadata.Metadata"
-                        }
-                    ]
-                },
-                "modifiedAt": {
-                    "description": "Timestamp when the entity was last modified",
-                    "type": "string",
-                    "example": "2025-02-08T14:13:39.080551Z"
-                }
-            }
-        },
-        "entities.RoomMember": {
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "description": "Timestamp when the entity was created",
-                    "type": "string",
-                    "example": "2025-02-08T14:13:39.080551Z"
-                },
-                "modifiedAt": {
-                    "description": "Timestamp when the entity was last modified",
-                    "type": "string",
-                    "example": "2025-02-08T14:13:39.080551Z"
-                },
-                "role": {
-                    "description": "Role defining user permissions in the room",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/roommember.Role"
-                        }
-                    ],
-                    "example": "ADMIN"
-                },
-                "roomID": {
-                    "description": "Unique identifier of the room",
-                    "type": "string",
-                    "example": "89e47f30"
-                },
-                "user": {
-                    "description": "User object associated with the room member",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/entities.User"
-                        }
-                    ]
-                },
-                "userID": {
-                    "description": "Unique identifier of the user",
-                    "type": "string",
-                    "example": "89e46f30"
-                }
-            }
-        },
-        "entities.User": {
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "description": "Timestamp when the entity was created",
-                    "type": "string",
-                    "example": "2025-02-08T14:13:39.080551Z"
-                },
-                "id": {
-                    "description": "Unique identifier of the user",
-                    "type": "string",
-                    "example": "89e46f30"
-                },
-                "metadata": {
-                    "description": "Metadata associated with the user",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/metadata.Metadata"
-                        }
-                    ]
-                },
-                "modifiedAt": {
-                    "description": "Timestamp when the entity was last modified",
-                    "type": "string",
-                    "example": "2025-02-08T14:13:39.080551Z"
-                }
-            }
-        },
-        "handlers.CreateRoomBody": {
-            "type": "object",
-            "required": [
-                "members"
-            ],
-            "properties": {
-                "id": {
-                    "description": "Optional unique identifier of the room. A default UID is created if not provided.",
-                    "type": "string",
-                    "example": "89e47f30"
-                },
-                "members": {
-                    "description": "List of user IDs to be added as room members.",
+                "recipients": {
+                    "description": "List of recipient user IDs.",
                     "type": "array",
                     "items": {
                         "type": "string"
                     },
                     "example": [
-                        "89e46f31",
-                        "89e46f32"
+                        "user_456",
+                        "user_789"
                     ]
                 },
-                "metadata": {
-                    "description": "Room metadata",
+                "senderID": {
+                    "description": "The ID of the sender.",
+                    "type": "string",
+                    "example": "user_123"
+                }
+            }
+        },
+        "entities.UserSpace": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "description": "Additional user-space metadata.",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/metadata.Metadata"
+                            "$ref": "#/definitions/entities.UserSpaceData"
                         }
                     ]
+                },
+                "spaceID": {
+                    "description": "Unique identifier for the space.",
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "updatedAt": {
+                    "description": "Timestamp of the last update in the user-space relationship.",
+                    "type": "string",
+                    "example": "2025-02-22T14:00:00Z"
+                },
+                "userID": {
+                    "description": "Unique identifier for the user.",
+                    "type": "string",
+                    "example": "user_123"
+                }
+            }
+        },
+        "entities.UserSpaceData": {
+            "type": "object",
+            "properties": {
+                "members": {
+                    "description": "List of user IDs who are members of the space.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "user_456",
+                        "user_789"
+                    ]
+                },
+                "preview": {
+                    "description": "A preview message for the space.",
+                    "type": "string",
+                    "example": "Latest message preview here..."
                 }
             }
         },
@@ -911,11 +332,25 @@
         },
         "handlers.MessageBody": {
             "type": "object",
+            "required": [
+                "recipients"
+            ],
             "properties": {
                 "content": {
                     "description": "Message content",
                     "type": "string",
                     "example": "Hello"
+                },
+                "recipients": {
+                    "description": "User IDs to be added as recipients.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "89e46f31",
+                        "89e46f32"
+                    ]
                 }
             }
         },
@@ -944,96 +379,17 @@
                 }
             }
         },
-        "handlers.RoomResponse": {
+        "handlers.SpacesResponse": {
             "type": "object",
             "properties": {
                 "data": {
-                    "description": "Room data",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/entities.Room"
-                        }
-                    ]
-                }
-            }
-        },
-        "handlers.RoomsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "description": "List of rooms",
+                    "description": "List of messages",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/entities.Room"
+                        "$ref": "#/definitions/entities.UserSpace"
                     }
                 }
             }
-        },
-        "handlers.UpdateRoomBody": {
-            "type": "object",
-            "properties": {
-                "metadata": {
-                    "description": "Room metadata",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/metadata.Metadata"
-                        }
-                    ]
-                }
-            }
-        },
-        "handlers.UserBody": {
-            "type": "object",
-            "properties": {
-                "metadata": {
-                    "description": "Metadata associated with the user",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/metadata.Metadata"
-                        }
-                    ]
-                }
-            }
-        },
-        "handlers.UserResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "description": "User data",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/entities.User"
-                        }
-                    ]
-                }
-            }
-        },
-        "handlers.UsersResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "description": "List of users",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entities.User"
-                    }
-                }
-            }
-        },
-        "metadata.Metadata": {
-            "type": "object",
-            "additionalProperties": true
-        },
-        "roommember.Role": {
-            "type": "string",
-            "enum": [
-                "ADMIN",
-                "MEMBER"
-            ],
-            "x-enum-varnames": [
-                "RoleAdmin",
-                "RoleMember"
-            ]
         }
     },
     "securityDefinitions": {

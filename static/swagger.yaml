@@ -1,123 +1,71 @@
 definitions:
   entities.Message:
     properties:
+      createdAt:
+        description: Timestamp of when the message was created.
+        example: "2025-02-22T14:00:00Z"
+        type: string
+      data:
+        allOf:
+        - $ref: '#/definitions/entities.MessageData'
+        description: Message details including content and sender info.
+      spaceID:
+        description: Unique identifier for the space where the message is sent.
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+    type: object
+  entities.MessageData:
+    properties:
       content:
-        description: Message content
-        example: Hello
+        description: The actual content of the message.
+        example: Hello, world!
         type: string
-      createdAt:
-        description: Timestamp when the entity was created
-        example: "2025-02-08T14:13:39.080551Z"
-        type: string
-      id:
-        description: Unique identifier of the message
-        example: 89e48f30
-        type: string
-      modifiedAt:
-        description: Timestamp when the entity was last modified
-        example: "2025-02-08T14:13:39.080551Z"
-        type: string
-      roomID:
-        description: Unique identifier of the room the message belongs to
-        example: 89e47f30
-        type: string
-      senderID:
-        description: Unique identifier of the user who created the message
-        example: 89e46f30
-        type: string
-    type: object
-  entities.Room:
-    properties:
-      createdAt:
-        description: Timestamp when the entity was created
-        example: "2025-02-08T14:13:39.080551Z"
-        type: string
-      id:
-        description: Unique identifier of the room
-        example: 89e47f30
-        type: string
-      members:
-        description: List of room members
-        items:
-          $ref: '#/definitions/entities.RoomMember'
-        type: array
-      metadata:
-        allOf:
-        - $ref: '#/definitions/metadata.Metadata'
-        description: Metadata associated with the room
-      modifiedAt:
-        description: Timestamp when the entity was last modified
-        example: "2025-02-08T14:13:39.080551Z"
-        type: string
-    type: object
-  entities.RoomMember:
-    properties:
-      createdAt:
-        description: Timestamp when the entity was created
-        example: "2025-02-08T14:13:39.080551Z"
-        type: string
-      modifiedAt:
-        description: Timestamp when the entity was last modified
-        example: "2025-02-08T14:13:39.080551Z"
-        type: string
-      role:
-        allOf:
-        - $ref: '#/definitions/roommember.Role'
-        description: Role defining user permissions in the room
-        example: ADMIN
-      roomID:
-        description: Unique identifier of the room
-        example: 89e47f30
-        type: string
-      user:
-        allOf:
-        - $ref: '#/definitions/entities.User'
-        description: User object associated with the room member
-      userID:
-        description: Unique identifier of the user
-        example: 89e46f30
-        type: string
-    type: object
-  entities.User:
-    properties:
-      createdAt:
-        description: Timestamp when the entity was created
-        example: "2025-02-08T14:13:39.080551Z"
-        type: string
-      id:
-        description: Unique identifier of the user
-        example: 89e46f30
-        type: string
-      metadata:
-        allOf:
-        - $ref: '#/definitions/metadata.Metadata'
-        description: Metadata associated with the user
-      modifiedAt:
-        description: Timestamp when the entity was last modified
-        example: "2025-02-08T14:13:39.080551Z"
-        type: string
-    type: object
-  handlers.CreateRoomBody:
-    properties:
-      id:
-        description: Optional unique identifier of the room. A default UID is created
-          if not provided.
-        example: 89e47f30
-        type: string
-      members:
-        description: List of user IDs to be added as room members.
+      recipients:
+        description: List of recipient user IDs.
         example:
-        - 89e46f31
-        - 89e46f32
+        - user_456
+        - user_789
         items:
           type: string
         type: array
-      metadata:
+      senderID:
+        description: The ID of the sender.
+        example: user_123
+        type: string
+    type: object
+  entities.UserSpace:
+    properties:
+      data:
         allOf:
-        - $ref: '#/definitions/metadata.Metadata'
-        description: Room metadata
-    required:
-    - members
+        - $ref: '#/definitions/entities.UserSpaceData'
+        description: Additional user-space metadata.
+      spaceID:
+        description: Unique identifier for the space.
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      updatedAt:
+        description: Timestamp of the last update in the user-space relationship.
+        example: "2025-02-22T14:00:00Z"
+        type: string
+      userID:
+        description: Unique identifier for the user.
+        example: user_123
+        type: string
+    type: object
+  entities.UserSpaceData:
+    properties:
+      members:
+        description: List of user IDs who are members of the space.
+        example:
+        - user_456
+        - user_789
+        items:
+          type: string
+        type: array
+      preview:
+        description: A preview message for the space.
+        example: Latest message preview here...
+        type: string
     type: object
   handlers.ErrorDetail:
     properties:
@@ -139,6 +87,16 @@ definitions:
         description: Message content
         example: Hello
         type: string
+      recipients:
+        description: User IDs to be added as recipients.
+        example:
+        - 89e46f31
+        - 89e46f32
+        items:
+          type: string
+        type: array
+    required:
+    - recipients
     type: object
   handlers.MessageResponse:
     properties:
@@ -155,273 +113,32 @@ definitions:
           $ref: '#/definitions/entities.Message'
         type: array
     type: object
-  handlers.RoomResponse:
+  handlers.SpacesResponse:
     properties:
       data:
-        allOf:
-        - $ref: '#/definitions/entities.Room'
-        description: Room data
-    type: object
-  handlers.RoomsResponse:
-    properties:
-      data:
-        description: List of rooms
+        description: List of messages
         items:
-          $ref: '#/definitions/entities.Room'
+          $ref: '#/definitions/entities.UserSpace'
         type: array
     type: object
-  handlers.UpdateRoomBody:
-    properties:
-      metadata:
-        allOf:
-        - $ref: '#/definitions/metadata.Metadata'
-        description: Room metadata
-    type: object
-  handlers.UserBody:
-    properties:
-      metadata:
-        allOf:
-        - $ref: '#/definitions/metadata.Metadata'
-        description: Metadata associated with the user
-    type: object
-  handlers.UserResponse:
-    properties:
-      data:
-        allOf:
-        - $ref: '#/definitions/entities.User'
-        description: User data
-    type: object
-  handlers.UsersResponse:
-    properties:
-      data:
-        description: List of users
-        items:
-          $ref: '#/definitions/entities.User'
-        type: array
-    type: object
-  metadata.Metadata:
-    additionalProperties: true
-    type: object
-  roommember.Role:
-    enum:
-    - ADMIN
-    - MEMBER
-    type: string
-    x-enum-varnames:
-    - RoleAdmin
-    - RoleMember
 info:
   contact: {}
 paths:
-  /v1/rooms:
+  /v1/messages:
     get:
       consumes:
       - application/json
-      description: Retrieves a paginated list of rooms that the requesting user is
-        a member of.
-      parameters:
-      - description: External identifier of the user
-        in: header
-        name: X-User-ID
-        required: true
-        type: string
-      - description: 'Page number (default: 1)'
-        example: 1
-        in: query
-        name: page
-        type: integer
-      - description: 'Number of rooms per page (default: 20)'
-        example: 20
-        in: query
-        name: size
-        type: integer
-      - description: Additional objects to include in the response (e.g., members)
-        example: '"members"'
-        in: query
-        name: include
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Successful response with room list
-          schema:
-            $ref: '#/definitions/handlers.RoomsResponse'
-        "400":
-          description: Invalid request parameters
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: List rooms
-      tags:
-      - Rooms
-    post:
-      consumes:
-      - application/json
-      description: Creates a new room and returns the room details. The requesting
-        user is assigned as an ADMIN in the room.
-      parameters:
-      - description: External identifier of the user
-        in: header
-        name: X-User-ID
-        required: true
-        type: string
-      - description: Room creation request payload
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.CreateRoomBody'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Room successfully created
-          schema:
-            $ref: '#/definitions/handlers.RoomResponse'
-        "400":
-          description: Invalid request payload
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Create a room
-      tags:
-      - Rooms
-  /v1/rooms/{id}:
-    get:
-      consumes:
-      - application/json
-      description: Retrieves details of a single room by its ID.
-      parameters:
-      - description: External identifier of the user
-        in: header
-        name: X-User-ID
-        required: true
-        type: string
-      - description: Unique identifier of the room
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Room details retrieved successfully
-          schema:
-            $ref: '#/definitions/handlers.RoomResponse'
-        "400":
-          description: Invalid request parameters
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-        "403":
-          description: Forbidden – User is not a member of the room
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-        "404":
-          description: Room not found
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Get room
-      tags:
-      - Rooms
-    patch:
-      consumes:
-      - application/json
-      description: Updates an existing room and returns the updated room details.
-        The requesting user must be an ADMIN in the room.
-      parameters:
-      - description: External identifier of the user
-        in: header
-        name: X-User-ID
-        required: true
-        type: string
-      - description: Room ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Room update request payload
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.UpdateRoomBody'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Room successfully updated
-          schema:
-            $ref: '#/definitions/handlers.RoomResponse'
-        "400":
-          description: Invalid request payload
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-        "403":
-          description: Forbidden – User is not an ADMIN
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-        "404":
-          description: Room not found
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Update a room
-      tags:
-      - Rooms
-  /v1/rooms/{roomID}/messages:
-    get:
-      consumes:
-      - application/json
-      description: Retrieves all SENT messages from a specified room, ordered by creation
-        time in descending order.
+      description: Retrieves all SENT messages from a specified space, ordered by
+        creation time in descending order.
       parameters:
       - description: External identifier of the requesting user
         in: header
         name: X-User-ID
         required: true
         type: string
-      - description: Unique identifier of the room from which messages are retrieved
-        in: path
-        name: roomID
+      - description: Unique identifier of the space from which messages are retrieved
+        in: header
+        name: X-Space-ID
         required: true
         type: string
       - description: Retrieve messages created before this timestamp (RFC 3339 format)
@@ -444,11 +161,11 @@ paths:
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
         "403":
-          description: Forbidden – User is not a member of the room
+          description: Forbidden – User cannot list messages on UserSpace
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
         "404":
-          description: Room not found
+          description: UserSpace not found
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
         "500":
@@ -463,17 +180,12 @@ paths:
     post:
       consumes:
       - application/json
-      description: Creates a message in the specified room and returns the created
-        message.
+      description: Creates a message into space identified by recipients and returns
+        the created message.
       parameters:
       - description: External identifier of the user
         in: header
         name: X-User-ID
-        required: true
-        type: string
-      - description: Unique identifier of the room where the message is created
-        in: path
-        name: roomID
         required: true
         type: string
       - description: Message creation request payload
@@ -497,14 +209,6 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
-        "403":
-          description: Forbidden – User is not a member of the room
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-        "404":
-          description: Room not found
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
         "500":
           description: Internal server error
           schema:
@@ -514,69 +218,29 @@ paths:
       summary: Create a message
       tags:
       - Messages
-  /v1/users:
-    delete:
-      consumes:
-      - application/json
-      description: Deletes a user by their external identifier.
-      parameters:
-      - description: External identifier of the user
-        in: header
-        name: X-User-ID
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: User successfully deleted
-        "400":
-          description: Invalid request parameters
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-        "404":
-          description: User not found
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Delete a user
-      tags:
-      - Users
+  /v1/spaces:
     get:
       consumes:
       - application/json
-      description: Retrieves a paginated list of users.
+      description: Retrieves a list of spaces that the requesting user is a member
+        of.
       parameters:
       - description: External identifier of the user
         in: header
         name: X-User-ID
+        required: true
         type: string
-      - description: 'Page number (default: 1)'
-        example: 1
+      - description: Retrieve spaces updated before this timestamp (RFC 3339 format)
         in: query
-        name: page
-        type: integer
-      - description: 'Number of users per page (default: 20)'
-        example: 20
-        in: query
-        name: size
-        type: integer
+        name: updatedBefore
+        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: Successful response with user list
+          description: Successful response with space list
           schema:
-            $ref: '#/definitions/handlers.UsersResponse'
+            $ref: '#/definitions/handlers.SpacesResponse'
         "400":
           description: Invalid request parameters
           schema:
@@ -591,93 +255,9 @@ paths:
             $ref: '#/definitions/handlers.ErrorResponse'
       security:
       - ApiKeyAuth: []
-      summary: List users
+      summary: List spaces
       tags:
-      - Users
-    patch:
-      consumes:
-      - application/json
-      description: Updates an existing user and returns the updated user details.
-      parameters:
-      - description: External identifier of the user
-        in: header
-        name: X-User-ID
-        required: true
-        type: string
-      - description: User request payload
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.UserBody'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: User successfully updated
-          schema:
-            $ref: '#/definitions/handlers.UserResponse'
-        "400":
-          description: Invalid request payload
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-        "404":
-          description: User not found
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Update a user
-      tags:
-      - Users
-    post:
-      consumes:
-      - application/json
-      description: Creates a new user and returns the created user details.
-      parameters:
-      - description: External identifier of the user
-        in: header
-        name: X-User-ID
-        required: true
-        type: string
-      - description: User request payload
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.UserBody'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: User successfully created
-          schema:
-            $ref: '#/definitions/handlers.UserResponse'
-        "400":
-          description: Invalid request payload
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
-      security:
-      - ApiKeyAuth: []
-      summary: Create a new user
-      tags:
-      - Users
+      - Spaces
 securityDefinitions:
   ApiKeyAuth:
     in: header

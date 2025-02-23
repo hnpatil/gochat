@@ -1,58 +1,38 @@
 package migrations
 
-import "gofr.dev/pkg/gofr/migration"
+import (
+	"gofr.dev/pkg/gofr/migration"
+)
 
 const (
-	createUsers = `create table users(
-      id VARCHAR(36) PRIMARY KEY,
-      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      modified_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      metadata jsonb DEFAULT '{}'
+	createMessages = `CREATE TABLE IF NOT EXISTS messages (
+      space_id TEXT,
+      created_at TIMESTAMP,
+      data TEXT,
+      PRIMARY KEY (space_id, created_at)
+	) WITH CLUSTERING ORDER BY (created_at DESC);`
+
+	createUserSpaces = `CREATE TABLE IF NOT EXISTS user_spaces (
+     user_id TEXT,
+     space_id TEXT,
+     updated_at TIMESTAMP,
+     data TEXT,
+     PRIMARY KEY (user_id, space_id)
 	);`
 
-	createRooms = `create table rooms(
-      id VARCHAR(36) PRIMARY KEY,
-      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      modified_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      metadata jsonb DEFAULT '{}'
-	);`
-
-	createRoomMembers = `CREATE TABLE room_members (
-		room_id VARCHAR(36) NOT NULL,
-		user_id VARCHAR(36) NOT NULL,
-		role VARCHAR(12) NOT NULL CHECK (role IN ('ADMIN', 'MEMBER')),
-		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		modified_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		PRIMARY KEY (room_id, user_id),
-		FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
-		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-  	);`
-
-	createMessages = `CREATE TABLE messages (
-		id VARCHAR(8),
-		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		modified_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		room_id VARCHAR(36) NOT NULL,
-		sender_id VARCHAR(36),
-		sent_at TIMESTAMP,
-		content TEXT NOT NULL,
-		PRIMARY KEY (room_id, id),
-		FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
-		FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE SET NULL
-	);`
-
-	createModifiedAtIndexOnMessages = "CREATE INDEX idx_messages_modified_at ON messages(modified_at);"
-	createModifiedAtIndexOnRooms    = "CREATE INDEX idx_rooms_modified_at ON rooms(modified_at);"
+	createUserSpacesView = `CREATE MATERIALIZED VIEW IF NOT EXISTS user_spaces_view AS
+	SELECT user_id, space_id, updated_at, data
+	FROM user_spaces
+	WHERE user_id IS NOT NULL AND space_id IS NOT NULL AND updated_at IS NOT NULL
+	PRIMARY KEY (user_id, updated_at, space_id)
+	WITH CLUSTERING ORDER BY (updated_at DESC);`
 )
 
 func All() map[int64]migration.Migrate {
 	return map[int64]migration.Migrate{
-		20250105010000: executeMigration(createUsers),
-		20250105030000: executeMigration(createRooms),
-		20250105040000: executeMigration(createRoomMembers),
-		20250105050000: executeMigration(createMessages),
-		20250105060000: executeMigration(createModifiedAtIndexOnMessages),
-		20250105070000: executeMigration(createModifiedAtIndexOnRooms),
+		20250105010000: executeMigration(createMessages),
+		20250105020000: executeMigration(createUserSpaces),
+		20250105030000: executeMigration(createUserSpacesView),
 	}
 }
 
