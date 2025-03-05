@@ -8,20 +8,28 @@ GoChat is a lightweight yet powerful chat server built with Go and the Gofr fram
 - **Spaces for Grouped Messages**: Organize related messages within designated spaces for better conversation management.
 - **High Write Throughput**: Optimized for handling a large volume of messages efficiently.
 
-## Prerequisites
-
-- **Go**: Ensure that Go is installed on your system. You can download it from the [official Go website](https://golang.org/dl/).
-
-## Getting Started
-
-1. **Clone the Repository**:
+## Running a container
+   ```bash
+   docker pull patilhn/gochat:v1.0.0
+   docker run -d -p 8000:8000 \
+      -e CASS_HOST=<Cassandra Host> \
+      -e CASS_KEYSPACE=<Cassandra Keyspace> \
+      -e CASS_PORT=<Cassandra Port> \
+      -e API_KEYS=<Server API Key> \
+      patilhn/gochat:v1.0.0
+   ```
+   
+## Running code locally
+1. **Go**: 
+   Ensure that Go is installed on your system. You can download it from the [official Go website](https://golang.org/dl/).
+2. **Clone the Repository**:
    ```bash
    git clone https://github.com/hnpatil/gochat.git
    cd gochat
-2. **Install Dependencies**:
+3. **Install Dependencies**:
     ```bash
    go mod tidy
-3. **Set Configuration**
+4. **Set Configuration**
    <br>Before running the application, set the required environment variables:
     ```bash
    export CASS_HOST=<Cassandra Host>
