@@ -16,6 +16,8 @@ GoChat is a lightweight yet powerful chat server built with Go and the Gofr fram
       -e CASS_KEYSPACE=<Cassandra Keyspace> \
       -e CASS_PORT=<Cassandra Port> \
       -e API_KEYS=<Server API Key> \
+      -e CASS_USERNAME=<Cassandra Username> \
+      -e CASS_PASSWORD=<Cassandra Password> \
       patilhn/gochat:v1.0.0
    ```
    
